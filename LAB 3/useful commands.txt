@@ -1,0 +1,1 @@
+gcc -o lab3 -std=c89 -pedantic-errors -Wall -Werror main.c

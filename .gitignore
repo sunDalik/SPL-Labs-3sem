@@ -1,0 +1,7 @@
+*
+!*/
+!*.*
+reports and theory/
+*.o
+ignoreit/
+*.deb

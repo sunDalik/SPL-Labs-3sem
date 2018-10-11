@@ -1,0 +1,2 @@
+launch benchmark test with hyperfine:
+hyperfine -m ntimes ./script1 ./script2
