@@ -19,17 +19,19 @@ void map_mut (struct list* list, int(*f) (int)) {
     }
 }
 
-int abs (int x) {
-	return x < 0? -x: x;
+void foreach (struct list* list, void(*f) (int)) {
+	while (list != NULL) {
+        f(list->element);
+        list = list->succ;
+    }
 }
 
-int cube (int x) {
-	return x*x*x;
-}
 
-int square (int x) {
-	return x*x;
-}
+int abs (int x) { return x < 0? -x: x; }
+int cube (int x) { return x*x*x; }
+int square (int x) { return x*x; }
+void print_space (int x) { printf("%d ", x); }
+void print_newline (int x) { printf("%d\n", x); }
 
 int main() {
 	int e;
@@ -41,6 +43,8 @@ int main() {
     }
     map_mut(list, abs);
     list_info(list);
+    foreach(list, print_space);
+    foreach(list, print_newline);
     list_info(map(list, cube));
     return 0;
 }
