@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
 
 const int x[] = { 1, 2, 3, 4, 5 };
 const int y[] = { 5, 4, 3, 2, 1};
+const int y_wrong[] = { 5, 4, 3, 2};
 
 int scalar(const int x[], const int y[], size_t xsz, size_t ysz) {
     size_t i; 
@@ -45,29 +47,30 @@ int is_prime(unsigned long num) {
 	return is_prime;
 }
 
-void check_if_long(const char string[], size_t stringsize) {
-	if (stringsize < 20) {
-		//ok
-	}
-	else if (stringsize > 20) {
-		//error
-	}
-	else if (stringsize == 20) {
-		//symbol-wise checking
-	}
-}
-
 
 int main(void) {
 	unsigned long num;
+	char input_buffer[64]; /* 64 chars is enough I guess */
+  	char* input_end_char;  
+
 	print_array(x, sizeof(x)/sizeof(x[0]));
 	print_array(y, sizeof(y)/sizeof(y[0]));
     scalar( x, y, sizeof(x)/sizeof(x[0]), sizeof(y)/sizeof(y[0]) );
 
+    print_array(x, sizeof(x)/sizeof(x[0]));
+	print_array(y_wrong, sizeof(y_wrong)/sizeof(y_wrong[0]));
+    scalar( x, y_wrong, sizeof(x)/sizeof(x[0]), sizeof(y_wrong)/sizeof(y_wrong[0]) );
+
     printf("Enter a number:\n");
-    if (scanf("%lu", &num) == 0) {
-    	printf("%s\n", "Not a Number!");
-    }
+   	scanf("%63s", input_buffer);
+
+
+  	errno = 0;
+  	num = strtoul((const char*) input_buffer, &input_end_char, 10);
+  	if (errno == ERANGE || *input_end_char != '\0' || input_buffer[0] == '-') {
+    	fprintf(stderr, "Input is not of the type \"unsigned long\" \n");
+    	return 1;
+  	}
 
     else if (is_prime(num) == 1) {
     	printf("%lu is prime!\n", num);
@@ -75,5 +78,5 @@ int main(void) {
     else {
     	printf("%lu is NOT prime.\n", num);
     }
-    return 0;
+    return 0;  
 }
