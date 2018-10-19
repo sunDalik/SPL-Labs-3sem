@@ -1,9 +1,6 @@
 #ifndef Lab4_linked_list
 #define Lab4_linked_list
 
-
-typedef struct list list;
-
 /**
  *  Linked list structure 
  *  List containts integer element and pointer to the next element

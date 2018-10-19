@@ -14,19 +14,19 @@ struct list* list_create(int e) {
         *listptr = list_create(e);
     }
     else {
-        list* next = *listptr;
+        struct list* next = *listptr;
         *listptr = list_create(e);
         (*listptr)->succ = next;
     }
 } 
 
 void list_add_back(struct list** listptr, int e){
-    list* new_node;
+    struct list* new_node;
     if (*listptr == NULL){
         *listptr = list_create(e);
     }
     else {
-        list* list = *listptr;
+        struct list* list = *listptr;
         new_node = list_create(e);
         while (list->succ != NULL) list = list->succ;
         list->succ = new_node;
@@ -38,9 +38,10 @@ void list_info(struct list* list){
     printf("List sum: %d\n", list_sum(list));
     printf("List elements: ");
     while (list != NULL){
-        printf("%d, ", list->element);
+        printf("%d ", list->element);
         list = list->succ;
     }
+    printf("\n");
 }
 
 struct list* list_node_at(struct list* list, unsigned int index) {
@@ -55,8 +56,8 @@ struct list* list_node_at(struct list* list, unsigned int index) {
 }
 
 void list_free(struct list** listptr){
-    list* list1 = *listptr;
-    list* list2;
+    struct list* list1 = *listptr;
+    struct list* list2;
     while (list1 != NULL){
         list2 = list1->succ;
         free(list1);
