@@ -34,7 +34,7 @@ int main() {
             break;
         }
         case 2: {
-        	puts("Enter list elements:");
+        	puts("Enter list elements delimited by whitespace and finish the input with ^D");
     		while (scanf("%d", &e) != EOF) { 
         		list_add_front(&list, e);
     		}
@@ -47,17 +47,29 @@ int main() {
     }
 
     
-    
+    puts("");
     list_info(list);
+    puts("\nList elements in a row:");
     foreach(list, print_space);
+    puts("\nList elements in a collumn:");
     foreach(list, print_newline);
-    list_info(map(list, square));
-    list_info(map(list, cube));
-    map_mut(list, abs);
-    list_info(iterate(10, 1, mul_by2));
-    printf("%d\n", foldl(list, 0, sum));
+    puts("Min element:");
     printf("%d\n", foldl(list, INT_MAX, min));
+    puts("Max element:");
     printf("%d\n", foldl(list, INT_MIN, max));
+    puts("Sum:");
+    printf("%d\n", foldl(list, 0, sum));
+    puts("Squares:");
+    foreach(map(list, square), print_space);
+    puts("\nCubes:");
+    foreach(map(list, cube), print_space);
+    puts("\nModules:");
+    map_mut(list, abs);
+    foreach(list, print_space);
+    puts("\nFirst 10 powers of 2:");
+    foreach(iterate(10, 1, mul_by2), print_space);
+    puts("");
+
 
     return 0;
 }

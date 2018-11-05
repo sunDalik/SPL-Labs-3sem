@@ -41,7 +41,7 @@ int foldl (struct list* list, int acc, int(*f) (int, int)){
 struct list* iterate (int length, int init_value, int(*f)(int)){
     struct list* new_list = list_create(init_value);
     int i;
-    for(i = 0; i < length; i++){
+    for(i = 1; i < length; i++){
         init_value = f(init_value);
         list_add_back(&new_list, init_value);
     }
