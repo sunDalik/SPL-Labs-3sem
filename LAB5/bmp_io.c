@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include "in_out_bmp.h"
-#include "bmp_pic_struct.h"
+#include "bmp_io.h"
+#include "bmp_struct.h"
 
 struct bmp_header* create_header(struct image const* pic, int padding) {
 
@@ -53,7 +53,6 @@ enum read_error_code read_picture(char const* filename, struct image* input_bmp)
     input_bmp->height = header.biHeight;
     input_bmp->width = header.biWidth;
     int padding = header.biWidth % 4;
-//
     for (row = 0; row < header.biHeight; row++){
         for (col = 0; col < header.biWidth; col++){
             input_bmp->data[row*header.biWidth + col] =

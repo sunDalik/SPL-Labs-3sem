@@ -1,13 +1,9 @@
-//
-// Created by dell on 06.11.18.
-//
-
-#ifndef SPLLAB5_IN_OUT_BMP_H
-#define SPLLAB5_IN_OUT_BMP_H
+#ifndef LAB5_BMP_IO_H
+#define LAB5_BMP_IO_H
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
-#include "bmp_pic_struct.h"
+#include "bmp_struct.h"
 
 enum read_error_code {
     READ_OK = 0,
@@ -27,4 +23,4 @@ enum write_error_code {
 enum read_error_code read_picture(char const* filename, struct image* new_image);
 enum write_error_code write_picture(char const* filename, struct image const* image);
 
-#endif //SPLLAB5_IN_OUT_BMP_H
+#endif

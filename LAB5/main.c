@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include "rotation.h"
-#include "in_out_bmp.h"
+#include "bmp_io.h"
 
 int main(int argc, char **argv) {
     if (argc != 2 && argc != 3) {
@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
             return 1;
         }
         case READ_OK: {
-            puts("Image loaded.");
+            puts("Image is loaded.");
             break;
         }
         case READ_FILE_NOT_FOUND: {
@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
             return 1;
         }
         case WRITE_OK: {
-            puts("Image saved");
+            puts("Image is saved");
             return 0;
         }
         default: {
