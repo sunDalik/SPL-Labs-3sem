@@ -3,6 +3,6 @@
 #include "bmp_struct.h"
 #include <math.h>
 
-struct image* rotate(struct image const* image);
+struct image* rotate(struct image const* picture);
 
 #endif

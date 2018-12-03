@@ -15,25 +15,28 @@ int main(int argc, char **argv) {
     if (argc == 2) {
         output_path = "out.bmp";
     } else {
-        output_path = argv[1];
+        output_path = argv[2];
     }
 
     struct image *in_image = (struct image *) malloc(sizeof(struct image));
     switch (read_picture(input_path, in_image)) {
+        case READ_OK: {
+            puts("Image is loaded.");
+            break;
+        }
+        case READ_FILENAME_NOT_FOUND: {
+            puts("Input file name is not specified");
+        }
+        case READ_FILE_ERROR: {
+            puts("Unable to open input file");
+            return 1;
+        }
         case READ_INVALID_BITS: {
             puts("Invalid input data");
             return 1;
         }
         case READ_INVALID_HEADER: {
-            puts("Invalid input header");
-            return 1;
-        }
-        case READ_OK: {
-            puts("Image is loaded.");
-            break;
-        }
-        case READ_FILE_NOT_FOUND: {
-            puts("Unable to open input file");
+            puts("Input file is not a bmp");
             return 1;
         }
         default: {
@@ -44,21 +47,21 @@ int main(int argc, char **argv) {
 
     struct image *out_image = rotate(in_image);
     switch (write_picture(output_path, out_image)) {
-        case WRITE_FILENAME_NOT_FOUND: {
-            puts("Output file is not found");
-            return 1;
-        }
-        case WRITE_IMAGE_NOT_FOUND: {
-            puts("Nothing to write");
-            return 1;
-        }
-        case WRITE_ERROR: {
-            puts("Writing error");
-            return 1;
-        }
         case WRITE_OK: {
             puts("Image is saved");
             return 0;
+        }
+        case WRITE_FILENAME_NOT_FOUND: {
+            puts("Output file name is not specified");
+            return 1;
+        }
+        case WRITE_IMAGE_NOT_FOUND: {
+            puts("Output image is null.");
+            return 1;
+        }
+        case WRITE_FILE_ERROR: {
+            puts("Unable to open output file");
+            return 1;
         }
         default: {
             puts("Undefined writing error");

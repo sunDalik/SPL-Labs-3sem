@@ -3,21 +3,20 @@
 #include <math.h>
 #include "rotation.h"
 
-struct image* rotate(struct image const* rotatable){
-
+struct image* rotate(struct image const* picture){
     int row;
     int col;
 
-    struct image* rotated = (struct image*)malloc(sizeof(struct image));
-    rotated->width = rotatable->height;
-    rotated->height = rotatable->width;
-    rotated->data = (struct pixel*)malloc(rotatable->height*rotatable->width* sizeof(struct pixel));
+    struct image* rotated_picture = (struct image*)malloc(sizeof(struct image));
+    rotated_picture->width = picture->height;
+    rotated_picture->height = picture->width;
+    rotated_picture->data = (struct pixel*)malloc(picture->height*picture->width* sizeof(struct pixel));
 
-    for (row = 0; row < rotatable->height; row++){
-        for (col = 0; col < rotatable->width; col++) {
-            rotated->data[((rotatable->width - 1 - col) * rotatable->height) + row] = rotatable->data[row*rotatable->width + col];
+    for (row = 0; row < picture->height; row++){
+        for (col = 0; col < picture->width; col++) {
+            rotated_picture->data[((rotated_picture->height- col - 1) * rotated_picture->width) + row] = picture->data[row*picture->width + col];
         }
     }
-    return rotated;
+    return rotated_picture;
 }
 
