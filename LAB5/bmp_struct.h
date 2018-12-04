@@ -24,7 +24,7 @@
 };
 
 struct pixel {
-    unsigned char b,g,r;
+    unsigned char r,g,b;
 };
 
 struct image {

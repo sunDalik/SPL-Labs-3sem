@@ -76,7 +76,7 @@ enum write_error_code write_picture(char const *filename, struct image const *ou
         }
     }
 
-    FILE *output_file = fopen(filename, "wb+");
+    FILE *output_file = fopen(filename, "wb");
     if (output_file == NULL) { return WRITE_FILE_ERROR; }
 
     fwrite(header, 1, sizeof(struct bmp_header), output_file);
