@@ -28,17 +28,12 @@ struct bmp_header *create_header(struct image const *pic, int padding) {
 }
 
 enum read_error_code read_picture(char const *filename, struct image *in_bmp) {
-    int row;
-    int col;
-    struct bmp_header header;
-
     if (filename == NULL) { return READ_FILENAME_NOT_FOUND; }
-
     FILE *input_file = fopen(filename, "rb");
     if (input_file == NULL) { return READ_FILE_ERROR; }
 
+    struct bmp_header header;
     fread(&header, 1, sizeof(header), input_file);
-
     if (header.bfType == 0) { return READ_INVALID_HEADER; }
 
     uint8_t *data = (uint8_t *) malloc(header.biSizeImage);
@@ -46,7 +41,6 @@ enum read_error_code read_picture(char const *filename, struct image *in_bmp) {
     fread(data, 1, header.biSizeImage, input_file);
 
     if (data == NULL) { return READ_INVALID_BITS; }
-
     if (in_bmp == NULL) {
         in_bmp = (struct image *) malloc(sizeof(struct image));
     }
@@ -55,38 +49,30 @@ enum read_error_code read_picture(char const *filename, struct image *in_bmp) {
     in_bmp->height = header.biHeight;
     in_bmp->width = header.biWidth;
     int padding = header.biWidth % 4;
-    for (row = 0; row < header.biHeight; row++) {
-        for (col = 0; col < header.biWidth; col++) {
+    for (int row = 0; row < header.biHeight; row++) {
+        for (int col = 0; col < header.biWidth; col++) {
             in_bmp->data[row * header.biWidth + col] =
                     *(struct pixel *) ((data) + sizeof(struct pixel) * (row * header.biWidth + col) + padding * row);
         }
     }
-
     fclose(input_file);
-
     return READ_OK;
 }
 
 
 enum write_error_code write_picture(char const *filename, struct image const *out_bmp) {
-
     if (filename == NULL) { return WRITE_FILENAME_NOT_FOUND; }
     if (out_bmp == NULL) { return WRITE_IMAGE_NOT_FOUND; }
 
     int padding = out_bmp->width % 4;
-    uint64_t row;
-    uint64_t col;
-
     struct bmp_header *header = create_header(out_bmp, padding);
 
-    uint64_t data_size =
-            out_bmp->width * out_bmp->height * sizeof(struct pixel) + out_bmp->height * (out_bmp->width % 4);
+    uint64_t data_size = (out_bmp->width + padding) * out_bmp->height * sizeof(struct pixel);
     uint8_t *data = (uint8_t *) calloc(1, data_size);
-    for (row = 0; row < out_bmp->height; row++) {
-        uint64_t padd = row * (out_bmp->width % 4);
-        for (col = 0; col < out_bmp->width; col++) {
+    for (int row = 0; row < out_bmp->height; row++) {
+        for (int col = 0; col < out_bmp->width; col++) {
             uint64_t pixel_i = row * out_bmp->width + col;
-            *((struct pixel *) (data + sizeof(struct pixel) * pixel_i + padd)) = out_bmp->data[pixel_i];
+            *((struct pixel *) (data + sizeof(struct pixel) * pixel_i + row * padding)) = out_bmp->data[pixel_i];
         }
     }
 
@@ -94,7 +80,7 @@ enum write_error_code write_picture(char const *filename, struct image const *ou
     if (output_file == NULL) { return WRITE_FILE_ERROR; }
 
     fwrite(header, 1, sizeof(struct bmp_header), output_file);
-    fwrite(data, 1, out_bmp->height * out_bmp->width * sizeof(struct pixel), output_file);
+    fwrite(data, 1, (out_bmp->width + padding) * out_bmp->height * sizeof(struct pixel), output_file);
     fclose(output_file);
     return WRITE_OK;
 }
