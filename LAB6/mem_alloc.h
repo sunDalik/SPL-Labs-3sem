@@ -12,7 +12,6 @@
 #define MINIMAL_HEAP_SIZE (sysconf(_SC_PAGESIZE))
 #define CHUNK_ALIGN 8
 #define CHUNK_MIN_SIZE (sizeof(struct mem) + CHUNK_ALIGN)
-#define _USE_MISC
 
 struct mem {
     struct mem* next;

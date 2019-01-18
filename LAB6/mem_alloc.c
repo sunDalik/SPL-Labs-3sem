@@ -7,7 +7,7 @@
 char *heap_space_start;
 
 void *heap_space_init() {
-    heap_space_start = mmap(HEAP_START, MINIMAL_HEAP_SIZE, PROT_READ | PROT_WRITE,
+    heap_space_start = mmap(HEAP_START, (size_t) MINIMAL_HEAP_SIZE, PROT_READ | PROT_WRITE,
                             MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, 0, 0);
     ((struct mem *) heap_space_start)->next = NULL;
     ((struct mem *) heap_space_start)->capacity = MINIMAL_HEAP_SIZE - sizeof(struct mem);
@@ -42,22 +42,17 @@ void *custom_alloc(size_t query) {
         //adding new free chunk
         if (chunk->next == NULL) {
             void *heap_end = (char *) chunk + sizeof(struct mem) + chunk->capacity;
-            void *new_area = mmap(heap_end, MINIMAL_HEAP_SIZE, PROT_READ | PROT_WRITE,
+            void *new_area = mmap(heap_end, (size_t) MINIMAL_HEAP_SIZE, PROT_READ | PROT_WRITE,
                                   MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, 0, 0);
-
-            if (new_area != MAP_FAILED && chunk->is_free) {
-                chunk->capacity = chunk->capacity + MINIMAL_HEAP_SIZE;
-                break;
-            } else if (new_area == MAP_FAILED) {
-                new_area = mmap(NULL, MINIMAL_HEAP_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
-            } else {
-                struct mem *new_chunk_head = (struct mem *) new_area;
-                new_chunk_head->next = NULL;
-                new_chunk_head->capacity = MINIMAL_HEAP_SIZE - sizeof(struct mem);
-                new_chunk_head->is_free = true;
-                chunk->next = new_chunk_head;
-                chunk = chunk->next;
+            if (new_area == MAP_FAILED) {
+                new_area = mmap(NULL, (size_t) MINIMAL_HEAP_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS,
+                                0, 0);
             }
+            struct mem *new_chunk_head = (struct mem *) new_area;
+            new_chunk_head->next = NULL;
+            new_chunk_head->capacity = MINIMAL_HEAP_SIZE - sizeof(struct mem);
+            new_chunk_head->is_free = true;
+            chunk->next = new_chunk_head;
         } else chunk = chunk->next;
     }
     chunk->is_free = false;
@@ -70,7 +65,7 @@ void *custom_alloc(size_t query) {
     }
 
     chunk->capacity = query;
-    struct mem *new_chunk = (struct mem*)((char *) chunk + sizeof(struct mem) + query);
+    struct mem *new_chunk = (struct mem *) ((char *) chunk + sizeof(struct mem) + query);
     new_chunk->next = chunk->next;
     new_chunk->capacity = remaining_capacity - sizeof(struct mem);
     new_chunk->is_free = true;
