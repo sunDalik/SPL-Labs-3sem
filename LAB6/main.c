@@ -9,11 +9,11 @@ int main() {
     memalloc_debug_heap(stdout, heap_start);
     puts("");
 
-    char *p1 = custom_alloc(12);
-    for (int i = 0; i < 12; ++i) {
+    char *p1 = custom_alloc(4096);
+    for (int i = 0; i < 4096; ++i) {
         p1[i] = (char) i;
     }
-    printf("\tp1 = %s = custom_alloc(12):\n", p1);
+    printf("\tp1 = %s = custom_alloc(4096):\n", p1);
     memalloc_debug_heap(stdout, heap_start);
     puts("");
 
