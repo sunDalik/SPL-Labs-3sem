@@ -10,7 +10,7 @@ void memalloc_debug_struct_info(FILE *f, struct mem const *const address) {
             address->capacity,
             address->is_free);
     for (i = 0; i < DEBUG_FIRST_BYTES && i < address->capacity; ++i) {
-        fprintf(f, "%02hhX ", ((char *) address)[sizeof(struct mem) + i]); 
+        fprintf(f, "%02hhX ", ((char *) address)[sizeof(struct mem) + i]);
     }
     puts("");
 }
