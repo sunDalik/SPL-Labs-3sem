@@ -18,6 +18,7 @@ dup 1 > if
   else drop 1 then ( if N = 2 it's prime) 
 else drop 0 then ( if N < 1 it's not prime) ;
 
+( n -- addr) ( check if n is prime and outputs the result to addr)
 : isPrimeAllot isPrime 1 allot dup rot rot ! ;
 
 ( str1addr str2addr -- str1addr str2addr str3addr )
@@ -29,10 +30,13 @@ r@ rot string-copy ( copied 1st string)
 r> r> swap dup >r + ( calculated addr for copying 2nd string)
 swap string-copy r> ( copied 2nd string and returned addr of the new string);
 
+( n -- ) ( outputs collatz sequence)
 : collatz 
-repeat dup . ."  " dup isEven if
-    2 / 
+repeat 
+  dup . ."  "  ( output number)
+  dup isEven if 
+    2 / ( if even n/2)
   else 
-    3 *  1 + then
-  dup 1 = 
+    3 *  1 + then ( if odd n*3 + 1)
+  dup 1 =  ( stop when n == 1)
 until . ;
