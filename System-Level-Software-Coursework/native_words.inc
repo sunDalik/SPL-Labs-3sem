@@ -15,6 +15,18 @@
 native %1, %2, 0
 %endmacro
 
+;---return stack macros---
+
+%macro rspush 1
+    sub rstack, 8
+    mov qword [rstack], %1
+%endmacro
+
+%macro rspop 1
+    mov %1, qword [rstack]
+    add rstack, 8
+%endmacro
+
 
 ;---stack combinators?---
 
@@ -149,4 +161,21 @@ native "lor", lor
     jmp next
 .lor_true:
     push rax
+    jmp next
+
+
+;---return stack operators---
+
+native ">r", to_rs
+    pop rax
+    rspush rax
+    jmp next
+
+native "r>", from_rs
+    rspop rax
+    push rax
+    jmp next
+
+native "r@", rs_fetch
+    push qword [rstack]
     jmp next
