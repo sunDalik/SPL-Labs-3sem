@@ -81,19 +81,24 @@ native "=", equals
     pop rax
     pop rdx
     cmp rax, rdx
-    sete al
-    movzx rax, al
-    push rax
+    je .equals_true
+    push 0
     jmp next
+	.equals_true:
+		push 1
+		jmp next
 
+;(a b -- a<b)
 native "<", less
     pop rdx
     pop rax
     cmp rax, rdx
-    setl al
-    movzx rax, al
-    push rax
+    jl .less_true
+    push 0
     jmp next
+	.less_true:
+		push 1
+		jmp next
 	
 
 ;---logical operators---
@@ -101,10 +106,14 @@ native "<", less
 native "not", not
     pop rax
     test rax, rax
-    setz al
-    movzx rax, al
+    je .not_zero
+	xor rax, rax
     push rax
     jmp next
+	.not_zero:
+		mov rax, 1
+		push rax
+		jmp next
 
 ;bitwise and
 native "and", and
@@ -123,10 +132,10 @@ native "land", land
     pop rax
     pop rdx
     test rax, rax
-    je .no
+    je .land_false
     push rdx
     jmp next
-.no:
+.land_false:
     push rax
     jmp next
 
@@ -135,9 +144,9 @@ native "lor", lor
     pop rax
     pop rdx
     test rax, rax
-    jne .yes
+    jne .lor_true
     push rdx
     jmp next
-.yes:
+.lor_true:
     push rax
     jmp next
