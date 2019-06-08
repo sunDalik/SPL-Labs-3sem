@@ -18,7 +18,7 @@ native %1, %2, 0
 
 ;---stack combinators?---
 
-;last letter [b in (a b)] in stack diagrams	marks top of the stack 
+;last letter [c in (a b c)] in stack diagrams marks top of the stack 
 ;(a b -- a) 
 native "drop", drop
     add rsp, 8
@@ -52,6 +52,8 @@ native "*", mul
     push rax
     jmp next
 
+;(a b -- a/b) integer division
+;notice that stack top is the second operand in arithmetic operations
 native "/", div
     pop rcx
     pop rax
@@ -60,6 +62,7 @@ native "/", div
     push rax
     jmp next
 
+;(a b -- a%b) remainder of division
 native "%", mod
     pop rcx
     pop rax
@@ -68,6 +71,7 @@ native "%", mod
     push rdx
     jmp next
 
+;(a b -- a-b) 
 native "-", minus
     pop rax
     sub [rsp], rax
@@ -88,5 +92,52 @@ native "<", less
     cmp rax, rdx
     setl al
     movzx rax, al
+    push rax
+    jmp next
+	
+
+;---logical operators---
+	
+native "not", not
+    pop rax
+    test rax, rax
+    setz al
+    movzx rax, al
+    push rax
+    jmp next
+
+;bitwise and
+native "and", and
+    pop rax
+    and [rsp], rax
+    jmp next
+
+;bitwise or
+native "or", or
+    pop rax
+    or [rsp], rax
+    jmp next
+	
+;logical and, expects both arguments to be 1 or 0
+native "land", land
+    pop rax
+    pop rdx
+    test rax, rax
+    je .no
+    push rdx
+    jmp next
+.no:
+    push rax
+    jmp next
+
+;logical or, expects both arguments to be 1 or 0
+native "lor", lor
+    pop rax
+    pop rdx
+    test rax, rax
+    jne .yes
+    push rdx
+    jmp next
+.yes:
     push rax
     jmp next
