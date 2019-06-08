@@ -166,16 +166,55 @@ native "lor", lor
 
 ;---return stack operators---
 
+;place value from data stack into return stack
 native ">r", to_rs
     pop rax
     rspush rax
     jmp next
 
+;place value from return stack to data stack
 native "r>", from_rs
     rspop rax
     push rax
     jmp next
 
+;copy value from return stack to data stack
 native "r@", rs_fetch
     push qword [rstack]
     jmp next
+	
+
+;---memory management---
+
+;(addr -- val) fetch value by address
+native "@", fetch_mem
+    pop rax
+    push qword[rax]
+    jmp next
+
+;(val addr -- ) store value by address 
+native "!", write_mem
+    pop rax
+    pop rdx
+    mov [rax], rdx
+    jmp next
+
+;(char addr -- ) store one byte by address
+native "c!", write_char_mem
+    pop rax
+    pop rdx
+    mov [rax], dl
+    jmp next
+
+;(addr -- char) fetch one byte by address
+native "c@", fetch_char_mem
+    pop rax
+    movzx rax, byte [rax]
+    push rax
+    jmp next
+
+;(xt -- ) execute word by execution token
+native "execute", execute
+    pop rax
+    mov w, rax
+    jmp [rax]
