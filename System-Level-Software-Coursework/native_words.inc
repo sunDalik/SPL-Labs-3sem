@@ -66,7 +66,7 @@ native "/", div
 native "%", mod
     pop rcx
     pop rax
-	xor rdx, rdx
+    xor rdx, rdx
     idiv rcx
     push rdx
     jmp next
@@ -84,9 +84,9 @@ native "=", equals
     je .equals_true
     push 0
     jmp next
-	.equals_true:
-		push 1
-		jmp next
+    .equals_true:
+	    push 1
+	    jmp next
 
 ;(a b -- a<b)
 native "<", less
@@ -96,9 +96,9 @@ native "<", less
     jl .less_true
     push 0
     jmp next
-	.less_true:
-		push 1
-		jmp next
+    .less_true:
+	    push 1
+	    jmp next
 	
 
 ;---logical operators---
@@ -107,13 +107,13 @@ native "not", not
     pop rax
     test rax, rax
     je .not_zero
-	xor rax, rax
+    xor rax, rax
     push rax
     jmp next
-	.not_zero:
-		mov rax, 1
-		push rax
-		jmp next
+    .not_zero:
+	    mov rax, 1
+	    push rax
+	    jmp next
 
 ;bitwise and
 native "and", and
