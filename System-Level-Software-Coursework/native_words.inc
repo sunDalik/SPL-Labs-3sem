@@ -218,3 +218,30 @@ native "execute", execute
     pop rax
     mov w, rax
     jmp [rax]
+	
+
+;---execution management---
+
+native "docol", docol
+    rspush pc
+    add w, 8
+    mov pc, w
+    jmp next
+
+native "branch", branch
+    mov pc, [pc]
+    jmp next
+
+native "0branch", branch0
+    pop rax
+    test rax, rax
+    je .branch0_true
+    add pc, 8
+    jmp next
+    .branch0_true:
+		mov pc, [pc]
+        jmp next
+	
+native "exit", exit
+    rspop pc
+    jmp next
