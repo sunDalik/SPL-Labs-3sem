@@ -8,6 +8,7 @@ global _start
 section .text
 
 %include "native_words.inc"
+%include "colon.inc"
 
 section .bss
 resq 1023

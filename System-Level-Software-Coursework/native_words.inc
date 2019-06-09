@@ -52,6 +52,8 @@ native "dup", dup
 native ".", pop_top
     pop rdi
     call print_int
+	call print_newline
+	jmp next
 
 native ".S", show_stack
     mov rcx, rsp
@@ -285,3 +287,6 @@ native "syscall", syscall
     push rdx
     jmp next
 	
+native "sp", sp
+    push rsp
+    jmp next
