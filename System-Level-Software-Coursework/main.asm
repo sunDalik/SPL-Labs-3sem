@@ -6,7 +6,6 @@ global _start
 %define rstack r13
 
 section .text
-
 %include "native_words.inc"
 %include "colon.inc"
 
@@ -16,13 +15,11 @@ rstack_start: resq 1
 user_mem: resq 65536
 
 section .data
-
 last_word: dq _lw
 dp: dq user_mem
 stack_start:  dq 0
  
 section .text
-
 _start: 
     mov rstack, rstack_start
     mov [stack_start], rsp

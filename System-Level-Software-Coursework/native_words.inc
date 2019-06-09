@@ -4,7 +4,6 @@
     section .data
     wh_ %+ %2 : dq _lw
     db 0, %1, 0, %3
-    
     %define _lw wh_%+ %2 
     xt_ %+ %2 :  dq i_ %+ %2 
     section .text
