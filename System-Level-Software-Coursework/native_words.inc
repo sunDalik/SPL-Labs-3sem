@@ -197,7 +197,7 @@ native "r>", from_rs
     jmp next
 
 ;copy value from return stack to data stack
-native "r@", rs_fetch
+native "r@", from_rs_copy
     push qword [rstack]
     jmp next
 	
