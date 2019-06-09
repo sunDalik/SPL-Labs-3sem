@@ -32,7 +32,7 @@ section .data
     dq xt_lit,  %2, xt_exit
 %endmacro
 
-;------
+;---colon words---
 
 section .rodata
 msg:
@@ -86,7 +86,6 @@ colon  "stack-cell", stack_cell
 	dq xt_sp
 endcolon
 
-; ( fd - char 1) or ( - 0 )
 colon "file-read-char", file_read_char
     dq xt_to_rs
     dq xt_stack_cell
@@ -145,7 +144,6 @@ colon "print-string-counted", print_string_counted
     dq xt_drop
 endcolon
 
-; ( str -- )
 colon "print-string", print_string
     dq xt_dup
     dq xt_string_length
@@ -311,29 +309,24 @@ colon "forth-find-word", forth_find_word
 endcolon
 
 colon "'", forth_tick, 1
-    dq xt_fd
-	dq xt_fetch_mem
-	dq xt_lit, word_buf
+	dq xt_fd
 	dq xt_file_read_word
-    branch0 .eof
-    dq xt_lit, word_buf
-	dq xt_forth_find_word
-    branch0 .no_word
-    dq xt_forth_cfa
-	dq xt_state
-    branch0 .interp
-    dq xt_lit, xt_lit, xt_comma, xt_comma
-    .interp:
-        endcolon
-    .no_word:
-        dq xt_lit, msg.no_such_word
-		dq xt_print_string
-		dq xt_print_string
-		dq xt_print_cr
-		endcolon
-    .eof:
-        dq xt_drop
-endcolon
+	dq xt_drop
+	dq xt_fd
+	dq xt_forth_find_word, xt_dup
+    branch0 .no_such_word
+	dq xt_forth_cfa
+    dq xt_state, xt_fetch_mem
+    branch0 .interpret
+    dq xt_lit, xt_lit
+    dq xt_comma
+    dq xt_comma
+.interpret:
+	dq xt_exit
+    .no_such_word:
+    dq xt_fd, xt_print_string
+    dq xt_lit, msg.no_such_word, xt_print_string
+    dq xt_exit
 
 colon "forth-cfa", forth_cfa
     dq xt_lit, 9
@@ -608,10 +601,6 @@ colon "forth-interpret", forth_interpret
 		dq xt_print_cr
     .exit:
 endcolon
-
-native "forth-stack-restore", forth_stack_restore
-    mov rsp, [stack_start]
-    jmp next
 
 colon "trap", trap
     dq xt_lit, wh_trap + 9
