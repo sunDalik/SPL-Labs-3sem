@@ -52,7 +52,6 @@ native "dup", dup
 native ".", pop_top
     pop rdi
     call print_int
-endnative
 
 native ".S", show_stack
     mov rcx, rsp
@@ -66,6 +65,7 @@ native ".S", show_stack
         pop rcx
         add rcx, 8
         jmp .show_stack_loop
+	
 	
 ;---arithmetic operators---
 
