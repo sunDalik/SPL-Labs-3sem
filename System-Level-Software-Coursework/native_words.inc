@@ -51,8 +51,8 @@ native "dup", dup
 native ".", pop_top
     pop rdi
     call print_int
-	call print_newline
-	jmp next
+    call print_newline
+    jmp next
 
 native ".S", show_stack
     mov rcx, rsp
@@ -66,8 +66,8 @@ native ".S", show_stack
         pop rcx
         add rcx, 8
         jmp .show_stack_loop
-	
-	
+    
+    
 ;---arithmetic operators---
 
 native "+", plus
@@ -115,8 +115,8 @@ native "=", equals
     push 0
     jmp next
     .equals_true:
-	    push 1
-	    jmp next
+        push 1
+        jmp next
 
 ;(a b -- a<b)
 native "<", less
@@ -127,12 +127,12 @@ native "<", less
     push 0
     jmp next
     .less_true:
-	    push 1
-	    jmp next
-	
+        push 1
+        jmp next
+    
 
 ;---logical operators---
-	
+    
 native "not", not
     pop rax
     test rax, rax
@@ -141,9 +141,9 @@ native "not", not
     push rax
     jmp next
     .not_zero:
-	    mov rax, 1
-	    push rax
-	    jmp next
+        mov rax, 1
+        push rax
+        jmp next
 
 ;bitwise and
 native "and", and
@@ -156,7 +156,7 @@ native "or", or
     pop rax
     or [rsp], rax
     jmp next
-	
+    
 ;logical and, expects both arguments to be 1 or 0
 native "land", land
     pop rax
@@ -200,7 +200,7 @@ native "r>", from_rs
 native "r@", from_rs_copy
     push qword [rstack]
     jmp next
-	
+    
 
 ;---memory management---
 
@@ -236,7 +236,7 @@ native "execute", execute
     pop rax
     mov w, rax
     jmp [rax]
-	
+    
 
 ;---execution management---
 
@@ -257,9 +257,9 @@ native "0branch", branch0
     add pc, 8
     jmp next
     .branch0_true:
-		mov pc, [pc]
+        mov pc, [pc]
         jmp next
-	
+    
 native "exit", exit
     rspop pc
     jmp next
@@ -271,7 +271,7 @@ native "lit", lit
     push qword [pc]
     add pc, 8
     jmp next
-	
+    
 ;(syscall_number arg1 arg2 arg3 arg4 arg5 arg6 -- new_rax new_rdx )
 native "syscall", syscall
     pop r9
@@ -285,7 +285,7 @@ native "syscall", syscall
     push rax
     push rdx
     jmp next
-	
+    
 native "sp", sp
     push rsp
     jmp next
