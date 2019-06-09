@@ -49,6 +49,23 @@ native "dup", dup
     push qword [rsp]
     jmp next
 
+native ".", pop_top
+    pop rdi
+    call print_int
+endnative
+
+native ".S", show_stack
+    mov rcx, rsp
+    .show_stack_loop:
+        cmp rcx, [stack_start] 
+        jae next
+        mov rdi, [rcx]
+        push rcx
+        call print_int
+        call print_newline
+        pop rcx
+        add rcx, 8
+        jmp .show_stack_loop
 	
 ;---arithmetic operators---
 
@@ -267,3 +284,4 @@ native "syscall", syscall
     push rax
     push rdx
     jmp next
+	
