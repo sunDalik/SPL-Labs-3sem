@@ -245,3 +245,25 @@ native "0branch", branch0
 native "exit", exit
     rspop pc
     jmp next
+
+
+;---service---
+
+native "lit", lit
+    push qword [pc]
+    add pc, 8
+    jmp next
+	
+;(syscall_number arg1 arg2 arg3 arg4 arg5 arg6 -- new_rax new_rdx )
+native "syscall", syscall
+    pop r9
+    pop r8
+    pop r10
+    pop rdx
+    pop rsi
+    pop rdi
+    pop rax
+    syscall
+    push rax
+    push rdx
+    jmp next
