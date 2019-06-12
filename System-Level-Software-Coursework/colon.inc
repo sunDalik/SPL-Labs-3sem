@@ -582,6 +582,30 @@ colon "forth-interpret", forth_interpret
     .exit:
 endcolon
 
+colon "'", forth_tick, 1
+    dq xt_fd, 
+    xt_fetch_mem,
+    xt_lit, word_buf,
+    xt_file_read_word
+    branch0 .eof
+    dq xt_lit, word_buf, xt_forth_find_word
+    branch0 .no_word
+    dq xt_forth_cfa, 
+	xt_state
+    branch0 .interp
+    dq xt_lit, xt_lit, xt_comma, xt_comma
+    .interp:
+        endcolon
+    .no_word:
+        dq xt_lit, msg.no_such_word,
+        xt_print_string,
+        xt_print_string,
+        xt_print_cr,
+        endcolon
+    .eof:
+        dq xt_drop
+endcolon
+
 colon "trap", trap
     dq xt_lit, wh_trap + 9
     dq xt_print_string
