@@ -290,9 +290,17 @@ native "sp", sp
     push rsp
     jmp next
 
-native "IMMEDIATE", immediate, 0
+native "here", here
+    push qword here
+    jmp next
+	
+native "here_ind", here_ind
+    push qword [here]
+    jmp next
+
+native "IMMEDIATE", immediate
     mov rax, [last_word]
-    mov dl, byte [rax + 8] ; skip the word ptr (8 bytes) and load (name length << 1) | flag
+    mov dl, byte [rax + 8]
     or dl, 1
     mov byte [rax + 8], dl
     jmp next

@@ -1,27 +1,26 @@
-: if ' 0branch , here 0 , ; IMMEDIATE
+: if ' 0branch , here_ind 0 , ; IMMEDIATE
 
-: else ' branch , here 0 , swap here swap ! ; IMMEDIATE
+: else ' branch , here_ind 0 , swap here_ind swap ! ; IMMEDIATE
 
-: then here swap ! ; IMMEDIATE
+: then here_ind swap ! ; IMMEDIATE
 
 : endif ' then execute ; IMMEDIATE
 
-: repeat here ; IMMEDIATE
+: repeat here_ind ; IMMEDIATE
 : until  ' 0branch , , ; IMMEDIATE
-
 
 : for 
     ' swap ,
     ' >r , 
     ' >r , 
-    here ' r> , 
+    here_ind ' r> , 
     ' r> , 
     ' 2dup , 
     ' >r , 
     ' >r , 
     ' < ,  
     ' 0branch ,  
-    here 0 , 
+    here_ind 0 , 
     swap ; IMMEDIATE
 
 : endfor 
@@ -30,7 +29,7 @@
     ' + , 
     ' >r , 
     ' branch , 
-    , here swap ! 
+    , here_ind swap ! 
     ' r> , 
     ' drop , 
     ' r> , 

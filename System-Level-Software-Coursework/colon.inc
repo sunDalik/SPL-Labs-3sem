@@ -40,7 +40,9 @@ msg:
 
 section .bss
 word_buf:  resq 512
+user_dict: resq 65536
 section .data
+here: dq user_dict
 fd: dq 0
 
 %define STATE_COMPILE 1
@@ -49,7 +51,6 @@ state: dq STATE_INTERPRET
 
 
 const "forth-dp", dp
-const "here", here
 const "forth-last-word", last_word
 const "forth-is-compiling", state
 const "forth-input-fd", fd
@@ -581,24 +582,24 @@ colon "forth-interpret", forth_interpret
 endcolon
 
 colon "'", forth_tick, 1
-    dq xt_fd, 
-    dq xt_fetch_mem,
-    dq xt_lit, word_buf,
+    dq xt_fd
+    dq xt_fetch_mem
+    dq xt_lit, word_buf
     dq xt_file_read_word
     branch0 .eof
     dq xt_lit, word_buf, xt_forth_find_word
     branch0 .no_word
-    dq xt_forth_cfa, 
+    dq xt_forth_cfa
 	dq xt_state
     branch0 .interp
     dq xt_lit, xt_lit, xt_comma, xt_comma
     .interp:
         endcolon
     .no_word:
-        dq xt_lit, msg.no_such_word,
-        dq xt_print_string,
-        dq xt_print_string,
-        dq xt_print_cr,
+        dq xt_lit, msg.no_such_word
+        dq xt_print_string
+        dq xt_print_string
+        dq xt_print_cr
         endcolon
     .eof:
         dq xt_drop
