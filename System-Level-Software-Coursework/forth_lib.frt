@@ -1,14 +1,12 @@
-: IMMEDIATE  forth-last-word @ forth-cfa 1 - dup c@ 1 or swap c! ;
+: if ' 0branch , here 0 , ; IMMEDIATE
 
-: if ' 0branch , forth-here @ 0 , ; IMMEDIATE
+: else ' branch , here 0 , swap here swap ! ; IMMEDIATE
 
-: else ' branch , forth-here @ 0 , swap forth-here @ swap ! ; IMMEDIATE
-
-: then forth-here @ swap ! ; IMMEDIATE
+: then here swap ! ; IMMEDIATE
 
 : endif ' then execute ; IMMEDIATE
 
-: repeat forth-here @ ; IMMEDIATE
+: repeat here ; IMMEDIATE
 : until  ' 0branch , , ; IMMEDIATE
 
 
@@ -16,14 +14,14 @@
     ' swap ,
     ' >r , 
     ' >r , 
-    forth-here ' r> , 
+    here ' r> , 
     ' r> , 
     ' 2dup , 
     ' >r , 
     ' >r , 
     ' < ,  
     ' 0branch ,  
-    forth-here @ 0 , 
+    here 0 , 
     swap ; IMMEDIATE
 
 : endfor 
@@ -32,7 +30,7 @@
     ' + , 
     ' >r , 
     ' branch , 
-    , forth-here @ swap ! 
+    , here swap ! 
     ' r> , 
     ' drop , 
     ' r> , 

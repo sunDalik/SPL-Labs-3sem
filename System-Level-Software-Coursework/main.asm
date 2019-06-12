@@ -12,10 +12,12 @@ section .text
 section .bss
 resq 1023
 rstack_start: resq 1
+user_dict: resq 65536
 user_mem: resq 65536
 
 section .data
 last_word: dq _lw
+here: dq user_dict
 dp: dq user_mem
 stack_start:  dq 0
  

@@ -289,3 +289,10 @@ native "syscall", syscall
 native "sp", sp
     push rsp
     jmp next
+
+native "IMMEDIATE", immediate, 0
+    mov rax, [last_word]
+    mov dl, byte [rax + 8] ; skip the word ptr (8 bytes) and load (name length << 1) | flag
+    or dl, 1
+    mov byte [rax + 8], dl
+    jmp next
