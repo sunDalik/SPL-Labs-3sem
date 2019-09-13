@@ -1,0 +1,52 @@
+#!/bin/bash
+ERROR_LOG="$HOME/lab1_err"
+
+while [ "$option" != 6 ]
+do
+	echo ""
+	echo "1) Print current directory"
+	echo "2) Change current directory"
+	echo "3) Print current directory's contents"
+	echo "4) Create symbolic link to a file"
+	echo "5) Execute command"
+	echo "6) Exit"
+	echo ""
+	echo "Choose option:"
+	read option || break
+	case "$option" in 
+		1)
+			pwd 2>>"$ERROR_LOG" || echo "An error has occured. Check log file at $HOME/lab1_err."
+			;;
+
+		2)
+			echo "Enter path"
+			read dir_path
+			cd "$dir_path" 2>>"$ERROR_LOG" || echo "An error has occured. Check log file at $HOME/lab1_err."
+			;;
+
+		3)
+			ls 2>>"$ERROR_LOG" || echo "An error has occured. Check log file at $HOME/lab1_err."
+			;;
+
+		4)
+			echo "Enter source file name"
+			read ln_source
+			echo "Enter link name"
+			read ln_name
+			ln -s "$ln_source" "$ln_name" 2>>"$ERROR_LOG" || echo "An error has occured. Check log file at $HOME/lab1_err."
+			;;
+
+		5)
+			echo "Enter command"
+			read custom_command
+			bash -c "$custom_command" 2>>"$ERROR_LOG" || echo "An error has occured. Check log file at $HOME/lab1_err."
+			;;
+
+		6)
+			;;
+
+		*)
+			echo "Unknown command"
+			;;
+	esac
+done
