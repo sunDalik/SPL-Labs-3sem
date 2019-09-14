@@ -1,5 +1,6 @@
 #!/bin/bash
 ERROR_LOG="$HOME/lab1_err"
+IFS="" 
 
 while [ "$option" != 6 ]
 do
@@ -8,38 +9,38 @@ do
 	echo "2) Change current directory"
 	echo "3) Print current directory's contents"
 	echo "4) Create symbolic link to a file"
-	echo "5) Execute command"
+	echo "5) Execute command from input"
 	echo "6) Exit"
 	echo ""
 	echo "Choose option:"
 	read option || break
 	case "$option" in 
 		1)
-			pwd 2>>"$ERROR_LOG" || echo "An error has occured. Check log file at $HOME/lab1_err."
+			pwd 2>>"$ERROR_LOG" || echo "An error has occured. Check log file at $HOME/lab1_err." 1>&2
 			;;
 
 		2)
 			echo "Enter path"
-			read dir_path
-			cd "$dir_path" 2>>"$ERROR_LOG" || echo "An error has occured. Check log file at $HOME/lab1_err."
+			read -r dir_path
+			cd "$dir_path" 2>>"$ERROR_LOG" || echo "An error has occured. Check log file at $HOME/lab1_err." 1>&2
 			;;
 
 		3)
-			ls 2>>"$ERROR_LOG" || echo "An error has occured. Check log file at $HOME/lab1_err."
+			ls 2>>"$ERROR_LOG" || echo "An error has occured. Check log file at $HOME/lab1_err." 1>&2
 			;;
 
 		4)
 			echo "Enter source file name"
-			read ln_source
+			read -r ln_source
 			echo "Enter link name"
-			read ln_name
-			ln -s "$ln_source" "$ln_name" 2>>"$ERROR_LOG" || echo "An error has occured. Check log file at $HOME/lab1_err."
+			read -r ln_name
+			ln -s "$ln_source" "$ln_name" 2>>"$ERROR_LOG" || echo "An error has occured. Check log file at $HOME/lab1_err." 1>&2
 			;;
 
 		5)
 			echo "Enter command"
-			read custom_command
-			bash -c "$custom_command" 2>>"$ERROR_LOG" || echo "An error has occured. Check log file at $HOME/lab1_err."
+			read -r custom_command
+			bash -c "$custom_command" 2>>"$ERROR_LOG" || echo "An error has occured. Check log file at $HOME/lab1_err." 1>&2
 			;;
 
 		6)
