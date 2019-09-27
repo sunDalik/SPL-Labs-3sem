@@ -1,0 +1,25 @@
+#!/bin/bash
+# outputs all hard links to a file passed as an argument
+
+if [[ "$#" -eq "0" ]]; then
+	echo "Missing argument. Script terminated."
+	exit 1
+fi
+if [[ -d "$1" ]]; then
+	echo "$1"
+	exit 0
+fi
+
+IFS=$'\n'
+arg_inode="$(ls -i $1 | awk '{print $1}')"
+for file in $(ls -tu1); 
+do
+	if [[ -d $file ]]; then 
+		continue
+       	fi
+
+	file_inode="$(ls -i $file | awk '{print $1}')"
+	if [[ "$file_inode" -eq "$arg_inode" ]]; then
+		echo "$file"
+	fi
+done
