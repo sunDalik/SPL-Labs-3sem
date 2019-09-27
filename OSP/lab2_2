@@ -1,0 +1,17 @@
+#!/bin/bash
+# outputs all users belonging to a higher number of groups than the number that was passed as an argument
+
+if [[ "$#" -eq "0" ]]; then
+	echo "Missing argument. Script terminated."
+	exit 1
+fi
+
+IFS=$'\n'
+for entry in $(getent passwd);
+do
+	username="$(echo "$entry" | awk -F: '{print $1}')"
+	group_count="$(getent group | grep "$username" | wc -l)"
+	if [ "$group_count" -gt "$1" ]; then
+		echo "$username"
+	fi
+done

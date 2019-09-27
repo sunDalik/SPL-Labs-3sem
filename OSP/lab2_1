@@ -1,5 +1,6 @@
 #!/bin/bash
-# outputs all hard links to a file passed as an argument
+# outputs all hard links to a file that was passed as an argument
+# they are sorted by access time
 
 if [[ "$#" -eq "0" ]]; then
 	echo "Missing argument. Script terminated."
