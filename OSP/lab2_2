@@ -11,7 +11,7 @@ for entry in $(getent passwd | sort);
 do
 	username="$(echo "$entry" | awk -F: '{print $1}')"
 	group_count="$(getent group | grep "$username" | wc -l)"
-	if [ "$group_count" -gt "$1" ]; then
+	if [[ "$group_count" -gt "$1" ]]; then
 		echo "$username"
 	fi
 done
