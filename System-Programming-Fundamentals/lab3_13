@@ -14,38 +14,57 @@ if [ "$1" == "solaris" ]; then
 			owner_group_gid=$(ls -n "$file" | nawk '{print $4}')
 			for line in $(ls -V "$file" | tail +2 | tail -r)
 			do
-				permission=$(echo "$line" | nawk -F: '{print $NF}')
 				case "$(echo "$line" | nawk -F: '{print $1}' | tr -d " \t")" in
 					everyone@)
 					;;
 
 					owner@)
-						if [ ! $USER == $owner_name ]; then
+						if [ ! "$USER" == "$owner_name" ]; then
 							continue
 						fi
 					;;
 
 					group@)
-						if [ ! -z "$(id -G "$USER" | grep -w $owner_group_gid)"]; then
+						if [ ! -z "$(id -G "$USER" | grep -w "$owner_group_gid")"]; then
 							continue
 						fi
 					;;
 
 					user)
+
 						user_name=$(echo "$line" | nawk -F: '{print $2}')
-						if [ ! $USER == "$user_id" ]; then
+						if [ ! "$USER" == "$user_id" ]; then
 							continue
 						fi
 					;;
 
 					group)
+
 						group_name=$(echo "$line" | nawk -F: '{print $2}')
-						group_id=$(getent group $group_name | nawk -F: '{print $3}')
+						group_id=$(getent group "$group_name" | nawk -F: '{print $3}')
 						if [ ! -z "$(id -G "$USER" | grep -w "$group_id")" ]; then
 							continue
 						fi
 					;;
 				esac
+
+				permission=$(echo "$line" | nawk -F: '{print $NF}')
+				if [ $permission == "allow" ]; then
+					if [ ! -z "$(echo "$line" | egrep ":.w............:")" ]; then
+						w=1
+					fi
+					if [ ! -z "$(echo "$line" | egrep ":...p..........:")" ]; then
+						p=1
+					fi
+				fi
+				if [ $permission == "deny" ]; then
+					if [ ! -z "$(echo "$line" | egrep ":.w............:")" ]; then
+						w=0
+					fi
+					if [ ! -z "$(echo "$line" | egrep ":...p..........:")" ]; then
+						p=0
+					fi
+				fi
 			done
 		fi
 	done
