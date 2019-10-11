@@ -1,0 +1,16 @@
+#!/bin/bash
+# print list of files that are "append only"
+
+if [ "$1" == "solaris" ]; then
+	# solaris nonsense
+	echo "dsadjsadasd"
+else
+	# modern implementation
+	IFS=$'\n'
+	for file in $(ls -1);
+	do
+		if [ ! -z "$(lsattr $file | grep "^.....a")" ]; then
+			echo "$file"
+		fi
+	done
+fi
