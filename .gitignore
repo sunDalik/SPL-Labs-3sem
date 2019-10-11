@@ -9,4 +9,4 @@ ignoreit/
 cmake-build-debug/
 .idea/
 CMakeLists.txt
-!OSP/lab*
+!System-Programming-Fundamentals/lab*

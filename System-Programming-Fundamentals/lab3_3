@@ -1,0 +1,47 @@
+#!/bin/bash
+# print list of users that have permission to execute a file that was passed as an argument
+# + check by UID and GID and not by names
+
+users_list=()
+
+if [ "$#" -eq "0" ]; then
+	echo "Missing argument. Script terminated."
+	exit
+fi
+
+if [ ! -e "$1" ]; then
+	echo "The file does not exist. Script terminated."
+	exit
+fi
+
+# check if owner has execute permission
+# ls -n lists UIDs and GIDs instead of names
+owner_uid=$(ls -n | grep " $1$" | awk '{ print $3 }')
+owner_name=$(getent passwd "$owner_uid" | awk -F: '{ print $1 }')
+if [ ! -z "$(ls -n | grep " $1$" | grep '^...x')" ]; then
+	users_list+=("$owner_name")
+fi	
+
+# check group
+group_gid=$(ls -n | grep " $1$" | awk '{ print $4 }')
+members=$(getent group "$group_gid" | awk -F: '{ print $4 }')
+if [ ! -z "$(ls -n | grep " $1$" | grep '^......x')" ] && [ ! -z "$members" ]; then
+	users_list+=("$(echo $members | tr "," "\n" | grep -v "$owner_name")")
+fi	
+
+# check others
+if [ ! -z "$(ls -n | grep " $1$" | grep '^.........x')" ]; then
+	for user in $(getent passwd | awk -F: ' { print $1 }'); do
+		if [ "$user" = "$owner_name" ]; then
+			continue
+		fi
+		for member in $(getent group "$group_gid" | awk -F: '{print $4}' | tr "," "\n"); do
+			if [ "$user" = "$member" ]; then
+				continue 2
+			fi
+		done	
+		users_list+=("$user")
+	done
+fi	
+
+printf '%s\n' "${users_list[@]}" | sort
