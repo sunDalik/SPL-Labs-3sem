@@ -3,7 +3,53 @@
 
 if [ "$1" == "solaris" ]; then
 	# solaris nonsense
-	echo "dsadjsadasd"
+	IFS=$'\n'
+	for file in $(ls -1)
+	do
+		if [ -f "$file" ]; then
+			w=0
+			p=0
+			owner_uid=$(ls -n "$file" | nawk '{print $3}')
+			owner_name=$(getent passwd "$owner_uid" | nawk '{print $1}')
+			owner_group_gid=$(ls -n "$file" | nawk '{print $4}')
+			for line in $(ls -V "$file" | tail +2 | tail -r)
+			do
+				permission=$(echo "$line" | nawk -F: '{print $NF}')
+				case "$(echo "$line" | nawk -F: '{print $1}' | tr -d " \t")" in
+					everyone@)
+					;;
+
+					owner@)
+						if [ ! $USER == $owner_name ]; then
+							continue
+						fi
+					;;
+
+					group@)
+						if [ ! -z "$(id -G "$USER" | grep -w $owner_group_gid)"]; then
+							continue
+						fi
+					;;
+
+					user)
+						user_name=$(echo "$line" | nawk -F: '{print $2}')
+						if [ ! $USER == "$user_id" ]; then
+							continue
+						fi
+					;;
+
+					group)
+						group_name=$(echo "$line" | nawk -F: '{print $2}')
+						group_id=$(getent group $group_name | nawk -F: '{print $3}')
+						if [ ! -z "$(id -G "$USER" | grep -w "$group_id")" ]; then
+							continue
+						fi
+					;;
+				esac
+			done
+		fi
+	done
+	
 else
 	# modern implementation
 	IFS=$'\n'
