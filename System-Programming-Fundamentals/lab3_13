@@ -10,7 +10,7 @@ if [ "$1" == "solaris" ]; then
 			w=0
 			p=0
 			owner_uid=$(ls -n "$file" | nawk '{print $3}')
-			owner_name=$(getent passwd "$owner_uid" | nawk '{print $1}')
+			owner_name=$(getent passwd "$owner_uid" | nawk -F: '{print $1}')
 			owner_group_gid=$(ls -n "$file" | nawk '{print $4}')
 			for line in $(ls -V "$file" | tail +2 | tail -r)
 			do
@@ -25,7 +25,7 @@ if [ "$1" == "solaris" ]; then
 					;;
 
 					group@)
-						if [ ! -z "$(id -G "$USER" | grep -w "$owner_group_gid")"]; then
+						if [ -z "$(/usr/xpg4/bin/id -G "$USER" | grep -w "$owner_group_gid")" ]; then
 							continue
 						fi
 					;;
@@ -33,7 +33,7 @@ if [ "$1" == "solaris" ]; then
 					user)
 
 						user_name=$(echo "$line" | nawk -F: '{print $2}')
-						if [ ! "$USER" == "$user_id" ]; then
+						if [ ! "$USER" == "$user_name" ]; then
 							continue
 						fi
 					;;
@@ -42,7 +42,7 @@ if [ "$1" == "solaris" ]; then
 
 						group_name=$(echo "$line" | nawk -F: '{print $2}')
 						group_id=$(getent group "$group_name" | nawk -F: '{print $3}')
-						if [ ! -z "$(id -G "$USER" | grep -w "$group_id")" ]; then
+						if [ -z "$(/usr/xpg4/bin/id -G "$USER" | grep -w "$group_id")" ]; then
 							continue
 						fi
 					;;
@@ -66,6 +66,9 @@ if [ "$1" == "solaris" ]; then
 					fi
 				fi
 			done
+			if [ "$w" -eq "0" ] && [ "$p" -eq "1" ]; then
+				echo $file
+			fi
 		fi
 	done
 	
