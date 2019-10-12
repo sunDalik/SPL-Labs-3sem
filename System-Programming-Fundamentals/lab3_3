@@ -14,7 +14,7 @@ if [ ! -e "$1" ]; then
 	exit
 fi
 
-# check if owner has execute permission
+# check if owner has execute permission, if true - print owner
 # ls -n lists UIDs and GIDs instead of names
 owner_uid=$(ls -n | grep " $1$" | awk '{ print $3 }')
 owner_name=$(getent passwd "$owner_uid" | awk -F: '{ print $1 }')
@@ -22,14 +22,14 @@ if [ ! -z "$(ls -n | grep " $1$" | grep '^...x')" ]; then
 	users_list+=("$owner_name")
 fi	
 
-# check group
+# if group has execute permission - print all its members
 group_gid=$(ls -n | grep " $1$" | awk '{ print $4 }')
 members=$(getent group "$group_gid" | awk -F: '{ print $4 }')
 if [ ! -z "$(ls -n | grep " $1$" | grep '^......x')" ] && [ ! -z "$members" ]; then
 	users_list+=("$(echo $members | tr "," "\n" | grep -v "$owner_name")")
 fi	
 
-# check others
+# if other have execute permission - print all users but owner and group members
 if [ ! -z "$(ls -n | grep " $1$" | grep '^.........x')" ]; then
 	for user in $(getent passwd | awk -F: ' { print $1 }'); do
 		if [ "$user" = "$owner_name" ]; then

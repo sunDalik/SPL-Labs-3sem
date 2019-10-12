@@ -1,9 +1,9 @@
 #!/bin/bash
 # print list of files that are "append only"
 
+IFS=$'\n'
 if [ "$1" == "solaris" ]; then
 	# solaris nonsense
-	IFS=$'\n'
 	for file in $(ls -1)
 	do
 		if [ -f "$file" ]; then
@@ -12,8 +12,11 @@ if [ "$1" == "solaris" ]; then
 			owner_uid=$(ls -n "$file" | nawk '{print $3}')
 			owner_name=$(getent passwd "$owner_uid" | nawk -F: '{print $1}')
 			owner_group_gid=$(ls -n "$file" | nawk '{print $4}')
+			
+			# loop through each acl entry in file in priority order
 			for line in $(ls -V "$file" | tail +2 | tail -r)
 			do
+				# check if an entry applies to current user
 				case "$(echo "$line" | nawk -F: '{print $1}' | tr -d " \t")" in
 					everyone@)
 					;;
@@ -47,7 +50,8 @@ if [ "$1" == "solaris" ]; then
 						fi
 					;;
 				esac
-
+				
+				# set w,p flags
 				permission=$(echo "$line" | nawk -F: '{print $NF}')
 				if [ $permission == "allow" ]; then
 					if [ ! -z "$(echo "$line" | egrep ":.w............:")" ]; then
@@ -66,17 +70,17 @@ if [ "$1" == "solaris" ]; then
 					fi
 				fi
 			done
+			# a file is "append only" if you can't write to it but can append
 			if [ "$w" -eq "0" ] && [ "$p" -eq "1" ]; then
 				echo $file
 			fi
 		fi
 	done
-	
 else
 	# modern implementation
-	IFS=$'\n'
 	for file in $(ls -1);
 	do
+		# a file is "append only" if it has corresponding flag
 		if [ ! -z "$(lsattr $file | grep "^.....a")" ]; then
 			echo "$file"
 		fi
