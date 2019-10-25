@@ -2,6 +2,7 @@
 !*/
 !*.*
 !makefile
+!Makefile
 reports and theory/
 *.o
 ignoreit/
