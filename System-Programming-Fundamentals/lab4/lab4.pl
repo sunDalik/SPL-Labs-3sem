@@ -1,4 +1,4 @@
-#!/usr/bin/perl -T
+#!/usr/bin/perl
 use strict;
 use warnings qw(FATAL all);
 use Getopt::Long;
