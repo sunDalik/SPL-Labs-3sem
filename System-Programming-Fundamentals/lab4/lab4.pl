@@ -32,7 +32,7 @@ foreach $file(@ARGV) {
 	$i++;
 }
 
-foreach $line(<STDIN>) {
+while($line = <STDIN>) {
 	foreach $file(@files) {
 		print $file $line;
 	}
