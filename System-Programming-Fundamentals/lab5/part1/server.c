@@ -20,7 +20,7 @@
 
 int mmapFD;     // mmap file descriptor
 char filename[12];  // all numbers are representable by str[12]
-struct system_info *sys_info_ptr;
+struct system_info *sys_info;
 void *sysVMemPointer;
 int sysVMemID; // system V memory segment id
 
@@ -37,17 +37,14 @@ void shutdown_server() {
 }
 
 int main(int argc, char *argv[]) {
-    // initialize system info struct
-    // storing pid, uid, gid
     pid_t pid = getpid();
     uid_t uid = getuid();
     gid_t gid = getgid();
-    // initialize start time
     time_t start_time = time(NULL);
     signal(SIGINT, shutdown_server);
 
-    int msgQID; // message queue id
-    msgbuf_t msg; // message
+    int msgQID;
+    msgbuf_t msg;
 
     // server setup from args
     int opt = 0, run_mode = UNDEFMODE;
@@ -59,7 +56,7 @@ int main(int argc, char *argv[]) {
                 // system v pointer
                 sysVMemID = shmget(IPC_PRIVATE, sizeof(struct system_info), IPC_CREAT | 0644);
                 sysVMemPointer = shmat(sysVMemID, NULL, 0);
-                sys_info_ptr = (struct system_info *) sysVMemPointer;
+                sys_info = (struct system_info *) sysVMemPointer;
                 break;
             case 'm':
                 run_mode = MMAPMODE;
@@ -67,14 +64,14 @@ int main(int argc, char *argv[]) {
                 sprintf(filename, "%d", pid);
                 mmapFD = open(filename, O_RDWR | O_CREAT, 0644);  // create file
                 ftruncate(mmapFD, sizeof(struct system_info));    // set file length
-                sys_info_ptr = (struct system_info *) mmap(NULL, sizeof(struct system_info),
-                                                           PROT_WRITE | PROT_READ, MAP_SHARED, mmapFD,
-                                                           0); // map file to memory
+                sys_info = (struct system_info *) mmap(NULL, sizeof(struct system_info),
+                                                       PROT_WRITE | PROT_READ, MAP_SHARED, mmapFD,
+                                                       0); // map file to memory
                 break;
             case 'q':
                 run_mode = MSGQMODE;
                 // initialize system_info structure
-                sys_info_ptr = (struct system_info *) malloc(sizeof(struct system_info));
+                sys_info = (struct system_info *) malloc(sizeof(struct system_info));
                 // initialize message queue
                 msgQID = msgget(IPC_PRIVATE, IPC_CREAT | 0644);
                 break;
@@ -112,34 +109,31 @@ int main(int argc, char *argv[]) {
 
 
     // initialize sys_info struct
-    sys_info_ptr->pid = pid;
-    sys_info_ptr->uid = uid;
-    sys_info_ptr->gid = gid;
-    sys_info_ptr->startup_time = time(NULL) - start_time;
-    getloadavg(sys_info_ptr->sys_loads, 3);
+    sys_info->pid = pid;
+    sys_info->uid = uid;
+    sys_info->gid = gid;
+    sys_info->startup_time = time(NULL) - start_time;
+    getloadavg(sys_info->sys_loads, 3);
 
-    printf("Server is running\n");
-
-    // server mainloop
+    printf("Server is running...\n");
     while (1) {
         if (run_mode == MSGQMODE) {
             // receive message
             msgrcv(msgQID, &msg, 0, MSGTYPE_QUERY, 0);
             // updating current time
-            sys_info_ptr->startup_time = time(NULL) - start_time;
+            sys_info->startup_time = time(NULL) - start_time;
             // updating average system load
-            getloadavg(sys_info_ptr->sys_loads, 3);
+            getloadavg(sys_info->sys_loads, 3);
             // send reply
             msg.mtype = MSGTYPE_REPLY;
-            memcpy(msg.mtext, sys_info_ptr, sizeof(struct system_info));
+            memcpy(msg.mtext, sys_info, sizeof(struct system_info));
             msgsnd(msgQID, &msg, sizeof(struct system_info), 0);
         } else {
-            // sleeping for 1 second
             sleep(1);
             // updating current time
-            sys_info_ptr->startup_time = time(NULL) - start_time;
+            sys_info->startup_time = time(NULL) - start_time;
             // updating average system load
-            getloadavg(sys_info_ptr->sys_loads, 3);
+            getloadavg(sys_info->sys_loads, 3);
         }
     }
 }

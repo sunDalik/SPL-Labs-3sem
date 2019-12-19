@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
 
     // setup client from args
     int opt = 0;
-    int connected = false;
+    int can_start = false;
     while ((opt = getopt(argc, argv, "v:m:q:")) != -1) {
         switch (opt) {
             case 'v':
@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
                 parse_int(optarg, &sysVMemID);
                 printf("id = %u\n\n", sysVMemID);
                 sys_info = (struct system_info *) shmat(sysVMemID, NULL, 0);
-                connected = true;
+                can_start = true;
                 break;
             case 'm':
                 printf("mmap mode\n");
@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
                 int mmapFD = open(optarg, O_RDWR, 0644);  // open file
                 sys_info = (struct system_info *) mmap(NULL, sizeof(struct system_info),
                                                        PROT_READ, MAP_SHARED, mmapFD, 0); // map file to memory
-                connected = true;
+                can_start = true;
                 break;
             case 'q':
                 printf("message-queue mode\n");
@@ -59,17 +59,17 @@ int main(int argc, char *argv[]) {
                 msgrcv(msgQID, &msg, sizeof(struct system_info), MSGTYPE_REPLY, 0);
                 sys_info = (struct system_info *) malloc(sizeof(struct system_info));
                 memcpy(sys_info, msg.mtext, sizeof(struct system_info));
-                connected = true;
+                can_start = true;
                 break;
         }
     }
 
-    if (connected == false) {
+    if (!can_start) {
         fprintf(stderr, "Usage: %s [-v] [-m] [-q]\n", argv[0]);
         exit(EXIT_FAILURE);
     }
 
-    printf("data received\n");
+    printf("Data received:\n");
     printf("time = %lu\n", sys_info->startup_time);
     printf("pid = %u\n", sys_info->pid);
     printf("uid = %u\n", sys_info->uid);
