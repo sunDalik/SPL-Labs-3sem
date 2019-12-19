@@ -9,7 +9,7 @@
 
 int main(int argc, char *argv[]) {
     char *socket_address;
-    struct system_info *sys_info;
+    struct system_info sys_info;
     int can_start = false;
 
     int opt = 0;
@@ -40,13 +40,13 @@ int main(int argc, char *argv[]) {
     read(fd, &sys_info, sizeof(struct system_info));
 
     printf("Data received:\n");
-    printf("time = %lu\n", sys_info->startup_time);
-    printf("pid = %u\n", sys_info->pid);
-    printf("uid = %u\n", sys_info->uid);
-    printf("gid = %u\n", sys_info->gid);
-    printf("average system load in 1min = %f\n", sys_info->sys_loads[0]);
-    printf("average system load in 2min = %f\n", sys_info->sys_loads[1]);
-    printf("average system load in 5min = %f\n", sys_info->sys_loads[2]);
+    printf("time = %lu\n", sys_info.startup_time);
+    printf("pid = %u\n", sys_info.pid);
+    printf("uid = %u\n", sys_info.uid);
+    printf("gid = %u\n", sys_info.gid);
+    printf("average system load in 1min = %f\n", sys_info.sys_loads[0]);
+    printf("average system load in 2min = %f\n", sys_info.sys_loads[1]);
+    printf("average system load in 5min = %f\n", sys_info.sys_loads[2]);
 
     close(fd);
     return 0;
