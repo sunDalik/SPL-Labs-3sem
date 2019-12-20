@@ -36,49 +36,30 @@ void *invert_alphabet(void *args) {
     }
 }
 
-bool parse_int(const char *str, int *var) {
-    char *end;
-    *var = (int) strtol(str, &end, 10);
-    if (end == str) return false;
-    return true;
-}
-
 int main(int argc, char *argv[]) {
-    // thread descriptors init
-    pthread_t inv_thread, swp_thread;
-    // setting up intervals
-    int inv_interval = 100, swp_interval = 200, main_interval = 1000;
+    int invert_interval = 100, change_case_interval = 200, main_interval = 1000;
     int opt = 0;
-    while ((opt = getopt(argc, argv, "i:s:m:c:")) != -1) {
+    while ((opt = getopt(argc, argv, "i:c:m:")) != -1) {
         switch (opt) {
             case 'i':
-                if (!parse_int(optarg, &inv_interval)) {
-                    printf("-i parameter must be integer!");
-                    return 1;
-                }
+                invert_interval = (int) strtol(optarg, NULL, 10);
                 break;
-            case 's':
-                if (!parse_int(optarg, &swp_interval)) {
-                    printf("-s parameter must be integer!");
-                    return 1;
-                }
+            case 'c':
+                change_case_interval = (int) strtol(optarg, NULL, 10);
                 break;
             case 'm':
-                if (!parse_int(optarg, &main_interval)) {
-                    printf("-m parameter must be integer!");
-                    return 1;
-                }
+                main_interval = (int) strtol(optarg, NULL, 10);
                 break;
             default:
-                fprintf(stderr, "Usage: %s [-i] [-s] [-m]\n", argv[0]);
+                fprintf(stderr, "Usage: %s [-i] [-c] [-m]\n", argv[0]);
                 exit(EXIT_FAILURE);
         }
     }
     pthread_mutex_init(&mutex, NULL);
 
-    // THREADS INIT
-    pthread_create(&inv_thread, NULL, change_case, (void *) &inv_interval);
-    pthread_create(&swp_thread, NULL, invert_alphabet, (void *) &swp_interval);
+    pthread_t thread1, thread2;
+    pthread_create(&thread1, NULL, invert_alphabet, (void *) &invert_interval);
+    pthread_create(&thread2, NULL, change_case, (void *) &change_case_interval);
 
     while (1) {
         usleep(main_interval);
