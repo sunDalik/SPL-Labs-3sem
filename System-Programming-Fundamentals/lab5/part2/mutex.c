@@ -8,6 +8,8 @@
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
+int invert_interval = 100, change_case_interval = 200, main_interval = 1000;
+
 void lock() {
     pthread_mutex_lock(&mutex);
 }
@@ -16,20 +18,18 @@ void unlock() {
     pthread_mutex_unlock(&mutex);
 }
 
-void *change_case(void *args) {
-    int *interval = (int *) args;
+void *change_case() {
     while (1) {
-        usleep(*interval);
+        usleep(change_case_interval);
         lock();
         invert_case();
         unlock();
     }
 }
 
-void *invert_alphabet(void *args) {
-    int *interval = (int *) args;
+void *invert_alphabet() {
     while (1) {
-        usleep(*interval);
+        usleep(invert_interval);
         lock();
         swap_alphabet();
         unlock();
@@ -37,7 +37,6 @@ void *invert_alphabet(void *args) {
 }
 
 int main(int argc, char *argv[]) {
-    int invert_interval = 100, change_case_interval = 200, main_interval = 1000;
     int opt = 0;
     while ((opt = getopt(argc, argv, "i:c:m:")) != -1) {
         switch (opt) {
@@ -58,8 +57,8 @@ int main(int argc, char *argv[]) {
     pthread_mutex_init(&mutex, NULL);
 
     pthread_t thread1, thread2;
-    pthread_create(&thread1, NULL, invert_alphabet, (void *) &invert_interval);
-    pthread_create(&thread2, NULL, change_case, (void *) &change_case_interval);
+    pthread_create(&thread1, NULL, invert_alphabet, NULL);
+    pthread_create(&thread2, NULL, change_case, NULL);
 
     while (1) {
         usleep(main_interval);

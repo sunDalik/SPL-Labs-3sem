@@ -8,6 +8,8 @@
 
 pthread_rwlock_t rwlock = PTHREAD_RWLOCK_INITIALIZER;
 
+int invert_interval = 100, change_case_interval = 200, main_interval = 1000, upper_count_interval = 10;
+
 void lock() {
     pthread_rwlock_wrlock(&rwlock);
 }
@@ -16,30 +18,27 @@ void unlock() {
     pthread_rwlock_unlock(&rwlock);
 }
 
-void *change_case(void *args) {
-    int *interval = (int *) args;
+void *change_case() {
     while (1) {
-        usleep(*interval);
+        usleep(change_case_interval);
         lock();
         invert_case();
         unlock();
     }
 }
 
-void *invert_alphabet(void *args) {
-    int *interval = (int *) args;
+void *invert_alphabet() {
     while (1) {
-        usleep(*interval);
+        usleep(invert_interval);
         lock();
         swap_alphabet();
         unlock();
     }
 }
 
-void *uppercase_count(void *args) {
-    int *interval = (int *) args;
-    for (;;) {
-        usleep(*interval);
+void *uppercase_count() {
+    while (1) {
+        usleep(upper_count_interval);
         pthread_rwlock_rdlock(&rwlock);
         int upper = count_uppercase();
         printf("\nUppercase symbols: %d\n", upper);
@@ -48,7 +47,6 @@ void *uppercase_count(void *args) {
 }
 
 int main(int argc, char *argv[]) {
-    int invert_interval = 100, change_case_interval = 200, main_interval = 1000, upper_count_interval = 10;
     int opt = 0;
     while ((opt = getopt(argc, argv, "i:c:m:u:")) != -1) {
         switch (opt) {
@@ -73,9 +71,9 @@ int main(int argc, char *argv[]) {
     pthread_rwlock_init(&rwlock, NULL);
 
     pthread_t thread1, thread2, thread3;
-    pthread_create(&thread1, NULL, invert_alphabet, (void *) &invert_interval);
-    pthread_create(&thread2, NULL, change_case, (void *) &change_case_interval);
-    pthread_create(&thread3, NULL, uppercase_count, (void *) &upper_count_interval);
+    pthread_create(&thread1, NULL, invert_alphabet, NULL);
+    pthread_create(&thread2, NULL, change_case, NULL);
+    pthread_create(&thread3, NULL, uppercase_count, NULL);
 
     while (1) {
         usleep(main_interval);
