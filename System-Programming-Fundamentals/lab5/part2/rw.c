@@ -6,7 +6,7 @@
 #include <pthread.h>
 #include <sys/ipc.h>
 
-pthread_rwlock_t rwlock = PTHREAD_RWLOCK_INITIALIZER;
+pthread_rwlock_t rwlock;
 
 int invert_interval = 100, change_case_interval = 200, main_interval = 1000, upper_count_interval = 500;
 

@@ -63,4 +63,5 @@ int main(int argc, char *argv[]) {
     printf("average system load in 1min = %f\n", sys_info->sys_loads[0]);
     printf("average system load in 5min = %f\n", sys_info->sys_loads[1]);
     printf("average system load in 15min = %f\n", sys_info->sys_loads[2]);
+    return EXIT_SUCCESS;
 }

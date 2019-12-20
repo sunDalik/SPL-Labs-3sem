@@ -11,9 +11,10 @@
 #include "system_info.h"
 
 struct system_info *sys_info;
+char sock_addr[12];
 
 void handle_signals(int sig) {
-    printf("Signal received: %s\n", strsignal(sig));
+    printf("\nSignal received: %s\n", strsignal(sig));
     printf("time = %lu\n", sys_info->startup_time);
     printf("pid = %u\n", sys_info->pid);
     printf("uid = %u\n", sys_info->uid);
@@ -22,56 +23,31 @@ void handle_signals(int sig) {
     printf("average system load in 5min = %f\n", sys_info->sys_loads[1]);
     printf("average system load in 15min = %f\n", sys_info->sys_loads[2]);
     printf("Server terminated\n");
-    exit(0);
+    remove(sock_addr);
+    exit(EXIT_SUCCESS);
 }
 
-int main(int argc, char *argv[]) {
-    char *socket_address;
-    int can_start = false;
-
+int main() {
     sys_info = (struct system_info *) malloc(sizeof(struct system_info));
-
     pid_t pid = getpid();
     uid_t uid = getuid();
     gid_t gid = getgid();
     time_t start_time = time(NULL);
 
-    // parse socket address from cmd args
-    int opt = 0;
-    while ((opt = getopt(argc, argv, "s:")) != -1) {
-        switch (opt) {
-            case 's':
-                socket_address = optarg;
-                can_start = true;
-                break;
-        }
-    }
-    if (!can_start) {
-        fprintf(stderr, "Usage: %s -s socket_addr\n", argv[0]);
-        exit(EXIT_FAILURE);
-    }
-    int fd = socket(AF_UNIX, SOCK_STREAM, 0);
-
+    sprintf(sock_addr, "%d", pid);
+    int sock_fd = socket(AF_LOCAL, SOCK_STREAM, 0);
     struct sockaddr_un addr;
-    addr.sun_family = AF_UNIX;
-    strncpy(addr.sun_path, socket_address, sizeof(addr.sun_path) - 1);
+    addr.sun_family = AF_LOCAL;
+    strncpy(addr.sun_path, sock_addr, sizeof(addr.sun_path) - 1);
     unsigned int addr_len = sizeof(struct sockaddr_un);
-    bind(fd, (const struct sockaddr *) &addr, addr_len);
-    listen(fd, 0);
+    bind(sock_fd, (const struct sockaddr *) &addr, addr_len);
+    listen(sock_fd, 0);
 
     printf("Init parameters:\n");
     printf("pid = %u\n", pid);
     printf("uid = %u\n", uid);
     printf("gid = %u\n\n", gid);
-    printf("socket name: %s\n\n", socket_address);
-
-    struct sigaction action = {.sa_handler = handle_signals, .sa_flags = 0};
-    sigemptyset(&action.sa_mask);
-    sigaction(SIGHUP, &action, NULL);
-    sigaction(SIGINT, &action, NULL);
-    sigaction(SIGTERM, &action, NULL);
-    sigaction(SIGUSR1, &action, NULL);
-    sigaction(SIGUSR2, &action, NULL);
+    printf("socket name: %s\n\n", sock_addr);
 
     sys_info->pid = pid;
     sys_info->uid = uid;
@@ -79,16 +55,19 @@ int main(int argc, char *argv[]) {
     sys_info->startup_time = time(NULL) - start_time;
     getloadavg(sys_info->sys_loads, 3);
 
+    struct sigaction action = {.sa_handler = handle_signals, .sa_flags = 0};
+    sigaction(SIGHUP, &action, NULL);
+    sigaction(SIGINT, &action, NULL);
+    sigaction(SIGTERM, &action, NULL);
+    sigaction(SIGUSR1, &action, NULL);
+    sigaction(SIGUSR2, &action, NULL);
+
     printf("Server is running...\n");
     while (1) {
-        // accept client connection
-        int cltfd = accept(fd, (struct sockaddr *) &addr, &addr_len);
-        // updating current time
+        int client_fd = accept(sock_fd, (struct sockaddr *) &addr, &addr_len);
         sys_info->startup_time = time(NULL) - start_time;
-        // updating average system load
         getloadavg(sys_info->sys_loads, 3);
-        // send reply
-        write(cltfd, (const void *) sys_info, sizeof(struct system_info));
-        close(cltfd);
+        write(client_fd, (const void *) sys_info, sizeof(struct system_info));
+        close(client_fd);
     }
 }

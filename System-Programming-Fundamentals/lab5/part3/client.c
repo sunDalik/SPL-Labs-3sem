@@ -8,34 +8,20 @@
 #include "system_info.h"
 
 int main(int argc, char *argv[]) {
-    char *socket_address;
-    struct system_info sys_info;
-    int can_start = false;
-
-    int opt = 0;
-    while ((opt = getopt(argc, argv, "s:")) != -1) {
-        switch (opt) {
-            case 's':
-                socket_address = optarg;
-                can_start = true;
-                break;
-        }
-    }
-
-    if (!can_start) {
-        fprintf(stderr, "Usage: %s -s socket_addr\n", argv[0]);
+    if (argc < 2) {
+        fprintf(stderr, "Usage: %s socket_addr\n", argv[0]);
         exit(EXIT_FAILURE);
     }
 
+    char *socket_address = argv[1];
+    struct system_info sys_info;
     printf("Connecting to socket %s\n\n", socket_address);
 
-    int fd = socket(AF_UNIX, SOCK_STREAM, 0);
-
+    int fd = socket(AF_LOCAL, SOCK_STREAM, 0);
     struct sockaddr_un addr;
-    addr.sun_family = AF_UNIX;
+    addr.sun_family = AF_LOCAL;
     strncpy(addr.sun_path, socket_address, sizeof(addr.sun_path) - 1);
     unsigned int addr_len = sizeof(struct sockaddr_un);
-
     connect(fd, (const struct sockaddr *) &addr, addr_len);
     read(fd, &sys_info, sizeof(struct system_info));
 
@@ -49,5 +35,5 @@ int main(int argc, char *argv[]) {
     printf("average system load in 15min = %f\n", sys_info.sys_loads[2]);
 
     close(fd);
-    return 0;
+    return EXIT_SUCCESS;
 }

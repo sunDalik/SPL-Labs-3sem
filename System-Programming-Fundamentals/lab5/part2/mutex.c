@@ -6,7 +6,7 @@
 #include <pthread.h>
 #include <sys/ipc.h>
 
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex;
 
 int invert_interval = 100, change_case_interval = 200, main_interval = 1000;
 
