@@ -3,7 +3,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <pthread.h>
-#include <sys/ipc.h>
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
@@ -23,41 +22,34 @@ void unlock() {
     semop(sem_id, &operations, 1);
 }
 
-void *change_case(void *args) {
-    int *interval = (int *) args;
+void *change_case() {
     while (1) {
-        usleep(*interval);
         lock();
         invert_case();
+        print_alphabet();
         unlock();
+        sleep(1);
     }
 }
 
-void *invert_alphabet(void *args) {
-    int *interval = (int *) args;
+void *invert_alphabet() {
     while (1) {
-        usleep(*interval);
         lock();
         swap_alphabet();
+        print_alphabet();
         unlock();
+        sleep(1);
     }
 }
 
 int main() {
-    // thread descriptors init
-    pthread_t inv_thread, swp_thread;
-
-    sem_id = semget(IPC_PRIVATE, 2, 0600 | IPC_CREAT);
+    sem_id = semget(IPC_PRIVATE, 2, IPC_CREAT | 0600);
     semctl(sem_id, 0, SETALL, 1);
 
-    // THREADS INIT
-    pthread_create(&inv_thread, NULL, change_case, NULL);
-    pthread_create(&swp_thread, NULL, invert_alphabet, NULL);
+    pthread_t thread1, thread2;
+    pthread_create(&thread1, NULL, change_case, NULL);
+    pthread_create(&thread2, NULL, invert_alphabet, NULL);
 
-    while (1) {
-        usleep(1000);
-        lock();
-        print_alphabet();
-        unlock();
-    }
+    pthread_join(thread1, NULL);
+    pthread_join(thread2, NULL);
 }
