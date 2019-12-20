@@ -15,7 +15,7 @@ char sock_addr[12];
 
 void handle_signals(int sig) {
     printf("\nSignal received: %s\n", strsignal(sig));
-    printf("time = %lu\n", sys_info->time_working);
+    printf("time = %lu\n", sys_info->run_time);
     printf("pid = %u\n", sys_info->pid);
     printf("uid = %u\n", sys_info->uid);
     printf("gid = %u\n", sys_info->gid);
@@ -52,7 +52,7 @@ int main() {
     sys_info->pid = pid;
     sys_info->uid = uid;
     sys_info->gid = gid;
-    sys_info->time_working = time(NULL) - start_time;
+    sys_info->run_time = time(NULL) - start_time;
     getloadavg(sys_info->sys_loads, 3);
 
     struct sigaction action = {.sa_handler = handle_signals, .sa_flags = 0};
@@ -65,7 +65,7 @@ int main() {
     printf("Server is running...\n");
     while (1) {
         int client_fd = accept(sock_fd, (struct sockaddr *) &addr, &addr_len);
-        sys_info->time_working = time(NULL) - start_time;
+        sys_info->run_time = time(NULL) - start_time;
         getloadavg(sys_info->sys_loads, 3);
         write(client_fd, (const void *) sys_info, sizeof(struct system_info));
         close(client_fd);

@@ -1,59 +1,60 @@
 #!/usr/bin/perl -T
-
 use strict;
 use warnings qw(FATAL all);
 use IO::Socket::UNIX;
 use English;
+$ENV{'PATH'} = '/usr/bin';
 
-$ENV{PATH} = '/usr/bin';
-$ENV{CDPATH} = "";
-$ENV{ENV} = "";
-$ENV{BASH_ENV} = '/usr/share/Modules/init/bash';
-
-my $SYSTEM_INFO_FMT = 'i<i<i<d<d<d<d<';
+my @gr_list = split(/ /, $GID);
+my $gid = $gr_list[0];
+my $start_time = time();
+my $run_time;
+my @sys_load;
 my $SOCKET_PATH = "LAB5_NDK_SOCKET";
-use sigtrap "handler" => \&signal_handler, qw(HUP INT TERM USR1 USR2);
 
-my $server = IO::Socket::UNIX->new(
-    Type => SOCK_STREAM(), Local => $SOCKET_PATH, Listen => 1
-) or die "Failed to create a socket: $!\n";
-
-my $gid = (split ' ', $GID)[0];
-print "Init parameters:\n";
-print "pid = $PID\n";
-print "uid = $UID\n";
-print "gid = $gid\n\n";
-print "socket name: $SOCKET_PATH\n\n";
-
-# init server parameters
-my ($s_time, $time_working) = (time(), time());
-my ($l1, $l5, $l15) = (0, 0, 0);
-
-print "Server is running...\n";
-
-while (my $clt = $server->accept()) {
-    $time_working = time() - $s_time;
-    my $loads = `uptime | awk '{print \$(NF-2)\$(NF-1)\$NF}'`;
-    $loads =~ /(\d+\.\d+),(\d+\.\d+),(\d+\.\d+)/;
-    my $state = pack $SYSTEM_INFO_FMT, $PID, $UID, $gid, $time_working, $l1, $l5, $l15;
-
-    $clt->print($state);
-    $clt->close();
+sub update_info {
+    $run_time = time() - $start_time;
+    @sys_load = split(/load average: /, qx(uptime));
+    @sys_load = split(", ", $sys_load[1]);
 }
 
-sub signal_handler {
-    $time_working = time() - $s_time;
-    my $loads = `uptime | awk '{print \$(NF-2)\$(NF-1)\$NF}'`;
-    $loads =~ /(\d+\.\d+),(\d+\.\d+),(\d+\.\d+)/;
+print "pid = $PID\n";
+print "uid = $UID\n";
+print "gid = $gid\n";
+print "socket name: $SOCKET_PATH\n\n";
+print("Server is running...\n");
+unlink $SOCKET_PATH;
+my $server = IO::Socket::UNIX->new(
+    Type   => SOCK_STREAM(),
+    Local  => $SOCKET_PATH,
+    Listen => 1,
+) or die "Cannot create a socket $SOCKET_PATH\n";
 
+update_info;
+while (my $conn = $server->accept()) {
+    update_info;
+    $conn->print("pid = $PID\n");
+    $conn->print("uid = $UID\n");
+    $conn->print("gid = $gid\n");
+    $conn->print("time = $run_time\n");
+    $conn->print("average system load in 1min = $sys_load[0]\n");
+    $conn->print("average system load in 5min = $sys_load[1]\n");
+    $conn->print("average system load in 15min = $sys_load[2]\n");
+    $conn->close();
+}
+
+use sigtrap handler => \&signal_handler, qw(HUP INT TERM USR1 USR2);
+
+sub signal_handler {
+    $run_time = time() - $start_time;
     print "Signal received: $_[0]\n";
-    print "time = $time_working\n";
+    print "time = $run_time\n";
     print "pid = $PID\n";
     print "uid = $UID\n";
     print "gid = $gid\n";
-    print "average system load in 1min = $l1\n";
-    print "average system load in 5min = $l5\n";
-    print "average system load in 15min = $l15\n";
+    print "average system load in 1min = $sys_load[0]\n";
+    print "average system load in 5min = $sys_load[1]\n";
+    print "average system load in 15min = $sys_load[2]\n";
     unlink $SOCKET_PATH;
     exit(0);
 }
