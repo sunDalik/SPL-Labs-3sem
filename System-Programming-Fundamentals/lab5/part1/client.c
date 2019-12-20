@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
     while ((opt = getopt(argc, argv, "v:m:q:")) != -1) {
         switch (opt) {
             case 'v':
-                printf("system-v mode\n");
+                printf("System V shared memory mode\n");
                 // getting system_info structure from system V memory segment
                 int sysVMemID;
                 parse_int(optarg, &sysVMemID);
@@ -46,13 +46,13 @@ int main(int argc, char *argv[]) {
                 can_start = true;
                 break;
             case 'q':
-                printf("message-queue mode\n");
+                printf("Message queue mode\n");
                 // initialize message queue
                 int msgQID;
                 parse_int(optarg, &msgQID);
                 printf("id = %u\n\n", msgQID);
                 // send message
-                msgbuf_t msg;
+                msg_t msg;
                 msg.mtype = MSGTYPE_QUERY;
                 msgsnd(msgQID, &msg, 0, 0);
                 // receive message
@@ -65,7 +65,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (!can_start) {
-        fprintf(stderr, "Usage: %s [-v] [-m] [-q]\n", argv[0]);
+        fprintf(stderr, "Usage: %s {-v|-m|-q} id \n", argv[0]);
         exit(EXIT_FAILURE);
     }
 

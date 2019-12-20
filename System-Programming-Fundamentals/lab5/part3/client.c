@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (!can_start) {
-        fprintf(stderr, "Usage: %s [-s] [SOCKET_ADDR]\n", argv[0]);
+        fprintf(stderr, "Usage: %s -s socket_addr\n", argv[0]);
         exit(EXIT_FAILURE);
     }
 

@@ -16,6 +16,6 @@ struct system_info {
 typedef struct {
     long mtype;
     char mtext[sizeof(struct system_info)];
-} msgbuf_t;
+} msg_t;
 
 #endif

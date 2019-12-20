@@ -13,22 +13,26 @@
 #include <fcntl.h>
 #include "system_info.h"
 
-#define UNDEFMODE 0
-#define SYSVMODE 1
-#define MMAPMODE 2
-#define MSGQMODE 3
+#define UNDEFINED_MODE 0
+#define SYSV_SHM_MODE 1
+#define MMAP_MODE 2
+#define MSGQ_MODE 3
 
-int mmapFD;     // mmap file descriptor
-char filename[12];  // all numbers are representable by str[12]
 struct system_info *sys_info;
+
+int sysVMemID;
 void *sysVMemPointer;
-int sysVMemID; // system V memory segment id
+
+int mmapFD;
+char filename[12];
+
+int msgQID;
 
 void shutdown_server() {
     printf("\nServer terminated\n");
     if (sysVMemPointer) {
         shmdt(sysVMemPointer);
-        printf("System-v-pointer released\n");
+        printf("System V shared memory pointer released\n");
     } else if (mmapFD) {
         remove(filename);
         printf("mmap file deleted\n");
@@ -43,42 +47,37 @@ int main(int argc, char *argv[]) {
     time_t start_time = time(NULL);
     signal(SIGINT, shutdown_server);
 
-    int msgQID;
-    msgbuf_t msg;
-
-    // server setup from args
-    int opt = 0, run_mode = UNDEFMODE;
+    int opt = 0;
+    int run_mode = UNDEFINED_MODE;
     while ((opt = getopt(argc, argv, "vmq")) != -1) {
         switch (opt) {
             case 'v':
-                run_mode = SYSVMODE;
-                // initialize system v memory segment and set system info pointer to
-                // system v pointer
+                run_mode = SYSV_SHM_MODE;
+                //initialize shared memory segment
                 sysVMemID = shmget(IPC_PRIVATE, sizeof(struct system_info), IPC_CREAT | 0644);
-                sysVMemPointer = shmat(sysVMemID, NULL, 0);
+                sysVMemPointer = shmat(sysVMemID, NULL, 0); //locate the shared memory segment somewhere
                 sys_info = (struct system_info *) sysVMemPointer;
                 break;
+
             case 'm':
-                run_mode = MMAPMODE;
-                // create file and map it to memory
+                run_mode = MMAP_MODE;
                 sprintf(filename, "%d", pid);
-                mmapFD = open(filename, O_RDWR | O_CREAT, 0644);  // create file
-                ftruncate(mmapFD, sizeof(struct system_info));    // set file length
-                sys_info = (struct system_info *) mmap(NULL, sizeof(struct system_info),
-                                                       PROT_WRITE | PROT_READ, MAP_SHARED, mmapFD,
-                                                       0); // map file to memory
+                mmapFD = open(filename, O_RDWR | O_CREAT, 0644); //create new file with the name of the PID
+                ftruncate(mmapFD, sizeof(struct system_info)); //set file size
+                sys_info = (struct system_info *) mmap(NULL, sizeof(struct system_info), PROT_WRITE | PROT_READ,
+                                                       MAP_SHARED, mmapFD, 0); //map file to memory
                 break;
+
             case 'q':
-                run_mode = MSGQMODE;
-                // initialize system_info structure
-                sys_info = (struct system_info *) malloc(sizeof(struct system_info));
-                // initialize message queue
+                run_mode = MSGQ_MODE;
+                //initialize message queue
                 msgQID = msgget(IPC_PRIVATE, IPC_CREAT | 0644);
+                sys_info = (struct system_info *) malloc(sizeof(struct system_info));
                 break;
         }
     }
-    if (run_mode == UNDEFMODE) {
-        fprintf(stderr, "Usage: %s [-v] [-m] [-q]\n", argv[0]);
+    if (run_mode == UNDEFINED_MODE) {
+        fprintf(stderr, "Usage: %s {-v|-m|-q}\n", argv[0]);
         exit(EXIT_FAILURE);
     }
 
@@ -88,27 +87,25 @@ int main(int argc, char *argv[]) {
     printf("gid = %u\n\n", gid);
 
     switch (run_mode) {
-        case SYSVMODE:
-            printf("system-v-shared-memory mode\n");
-            printf("Created system-v-memory-segment\n");
+        case SYSV_SHM_MODE:
+            printf("System V shared memory mode\n");
+            printf("Created System V shared memory segment:\n");
             printf("id = %u\n", sysVMemID);
             printf("size = %lu bytes\n\n", sizeof(struct system_info));
             break;
-        case MMAPMODE:
+        case MMAP_MODE:
             printf("mmap mode\n");
             printf("Created new file:\n");
             printf("name = %s\n", filename);
             printf("size = %lu bytes\n\n", sizeof(struct system_info));
             break;
-        case MSGQMODE:
-            printf("system-v-message-queue mode\n");
-            printf("Created new queue\n");
+        case MSGQ_MODE:
+            printf("System V message queue mode\n");
+            printf("Created new message queue:\n");
             printf("id = %u\n\n", msgQID);
             break;
     }
 
-
-    // initialize sys_info struct
     sys_info->pid = pid;
     sys_info->uid = uid;
     sys_info->gid = gid;
@@ -117,22 +114,21 @@ int main(int argc, char *argv[]) {
 
     printf("Server is running...\n");
     while (1) {
-        if (run_mode == MSGQMODE) {
-            // receive message
+        if (run_mode == MSGQ_MODE) {
+            //receive message
+            msg_t msg;
             msgrcv(msgQID, &msg, 0, MSGTYPE_QUERY, 0);
-            // updating current time
             sys_info->startup_time = time(NULL) - start_time;
-            // updating average system load
             getloadavg(sys_info->sys_loads, 3);
-            // send reply
+
+            //send reply
             msg.mtype = MSGTYPE_REPLY;
             memcpy(msg.mtext, sys_info, sizeof(struct system_info));
             msgsnd(msgQID, &msg, sizeof(struct system_info), 0);
         } else {
+            //update the info every second
             sleep(1);
-            // updating current time
             sys_info->startup_time = time(NULL) - start_time;
-            // updating average system load
             getloadavg(sys_info->sys_loads, 3);
         }
     }
