@@ -12,26 +12,16 @@
 #include <fcntl.h>
 #include "system_info.h"
 
-bool parse_int(const char *str, int *var) {
-    char *end;
-    *var = (int) strtol(str, &end, 10);
-    if (end == str) return false;
-    return true;
-}
-
 int main(int argc, char *argv[]) {
     struct system_info *sys_info = NULL;
-
-    // setup client from args
-    int opt = 0;
     int can_start = false;
+
+    int opt = 0;
     while ((opt = getopt(argc, argv, "v:m:q:")) != -1) {
         switch (opt) {
             case 'v':
                 printf("System V shared memory mode\n");
-                // getting system_info structure from system V memory segment
-                int sysVMemID;
-                parse_int(optarg, &sysVMemID);
+                int sysVMemID = (int) strtol(optarg, NULL, 10);
                 printf("id = %u\n\n", sysVMemID);
                 sys_info = (struct system_info *) shmat(sysVMemID, NULL, 0);
                 can_start = true;
@@ -39,23 +29,19 @@ int main(int argc, char *argv[]) {
             case 'm':
                 printf("mmap mode\n");
                 printf("name = %s\n\n", optarg);
-                // opening file and getting system_info structure from it
-                int mmapFD = open(optarg, O_RDWR, 0644);  // open file
+                int mmapFD = open(optarg, O_RDONLY, 0644);
                 sys_info = (struct system_info *) mmap(NULL, sizeof(struct system_info),
-                                                       PROT_READ, MAP_SHARED, mmapFD, 0); // map file to memory
+                                                       PROT_READ, MAP_SHARED, mmapFD, 0);
                 can_start = true;
                 break;
             case 'q':
                 printf("Message queue mode\n");
-                // initialize message queue
-                int msgQID;
-                parse_int(optarg, &msgQID);
+                int msgQID = (int) strtol(optarg, NULL, 10);
                 printf("id = %u\n\n", msgQID);
-                // send message
                 msg_t msg;
                 msg.mtype = MSGTYPE_QUERY;
                 msgsnd(msgQID, &msg, 0, 0);
-                // receive message
+
                 msgrcv(msgQID, &msg, sizeof(struct system_info), MSGTYPE_REPLY, 0);
                 sys_info = (struct system_info *) malloc(sizeof(struct system_info));
                 memcpy(sys_info, msg.mtext, sizeof(struct system_info));

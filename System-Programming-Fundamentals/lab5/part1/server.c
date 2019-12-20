@@ -117,14 +117,15 @@ int main(int argc, char *argv[]) {
         if (run_mode == MSGQ_MODE) {
             //receive message
             msg_t msg;
-            msgrcv(msgQID, &msg, 0, MSGTYPE_QUERY, 0);
-            sys_info->startup_time = time(NULL) - start_time;
-            getloadavg(sys_info->sys_loads, 3);
+            if (msgrcv(msgQID, &msg, 0, MSGTYPE_QUERY, 0) != -1) {
+                sys_info->startup_time = time(NULL) - start_time;
+                getloadavg(sys_info->sys_loads, 3);
 
-            //send reply
-            msg.mtype = MSGTYPE_REPLY;
-            memcpy(msg.mtext, sys_info, sizeof(struct system_info));
-            msgsnd(msgQID, &msg, sizeof(struct system_info), 0);
+                //send reply
+                msg.mtype = MSGTYPE_REPLY;
+                memcpy(msg.mtext, sys_info, sizeof(struct system_info));
+                msgsnd(msgQID, &msg, sizeof(struct system_info), 0);
+            }
         } else {
             //update the info every second
             sleep(1);
