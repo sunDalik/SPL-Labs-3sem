@@ -4,6 +4,7 @@ use warnings qw(FATAL all);
 use IO::Socket::UNIX;
 use English;
 $ENV{'PATH'} = '/usr/bin';
+$ENV{ENV}="";
 
 my @gr_list = split(/ /, $GID);
 my $gid = $gr_list[0];

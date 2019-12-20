@@ -35,9 +35,9 @@ int main() {
     time_t start_time = time(NULL);
 
     sprintf(sock_addr, "%d", pid);
-    int sock_fd = socket(AF_LOCAL, SOCK_STREAM, 0);
+    int sock_fd = socket(AF_UNIX, SOCK_STREAM, 0);
     struct sockaddr_un addr;
-    addr.sun_family = AF_LOCAL;
+    addr.sun_family = AF_UNIX;
     strncpy(addr.sun_path, sock_addr, sizeof(addr.sun_path) - 1);
     unsigned int addr_len = sizeof(struct sockaddr_un);
     bind(sock_fd, (const struct sockaddr *) &addr, addr_len);

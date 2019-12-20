@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <stdbool.h>
 #include "system_info.h"
+#include <string.h>
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
@@ -17,9 +18,9 @@ int main(int argc, char *argv[]) {
     struct system_info sys_info;
     printf("Connecting to socket %s\n\n", socket_address);
 
-    int fd = socket(AF_LOCAL, SOCK_STREAM, 0);
+    int fd = socket(AF_UNIX, SOCK_STREAM, 0);
     struct sockaddr_un addr;
-    addr.sun_family = AF_LOCAL;
+    addr.sun_family = AF_UNIX;
     strncpy(addr.sun_path, socket_address, sizeof(addr.sun_path) - 1);
     unsigned int addr_len = sizeof(struct sockaddr_un);
     connect(fd, (const struct sockaddr *) &addr, addr_len);
