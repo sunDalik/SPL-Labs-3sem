@@ -14,10 +14,10 @@ my $client = IO::Socket::UNIX->new(Type => SOCK_STREAM(), Peer => $SOCKET_PATH)
 
 my $sys_info_buf = "";
 read $client, $sys_info_buf, $SYSTEM_INFO_SIZE;
-my ($spid, $suid, $sgid, $rt, $sl1, $sl5, $sl15) = unpack $SYSTEM_INFO_FMT, $sys_info_buf;
+my ($spid, $suid, $sgid, $time_working, $sl1, $sl5, $sl15) = unpack $SYSTEM_INFO_FMT, $sys_info_buf;
 
 print "Data received: \n";
-print "time = $rt\n";
+print "time = $time_working\n";
 print "pid = $spid\n";
 print "uid = $suid\n";
 print "gid = $sgid\n";

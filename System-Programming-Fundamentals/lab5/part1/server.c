@@ -109,7 +109,7 @@ int main(int argc, char *argv[]) {
     sys_info->pid = pid;
     sys_info->uid = uid;
     sys_info->gid = gid;
-    sys_info->startup_time = time(NULL) - start_time;
+    sys_info->time_working = time(NULL) - start_time;
     getloadavg(sys_info->sys_loads, 3);
 
     printf("Server is running...\n");
@@ -118,7 +118,7 @@ int main(int argc, char *argv[]) {
             //receive message
             msg_t msg;
             if (msgrcv(msgQID, &msg, 0, MSGTYPE_QUERY, 0) != -1) {
-                sys_info->startup_time = time(NULL) - start_time;
+                sys_info->time_working = time(NULL) - start_time;
                 getloadavg(sys_info->sys_loads, 3);
 
                 //send reply
@@ -129,7 +129,7 @@ int main(int argc, char *argv[]) {
         } else {
             //update the info every second
             sleep(1);
-            sys_info->startup_time = time(NULL) - start_time;
+            sys_info->time_working = time(NULL) - start_time;
             getloadavg(sys_info->sys_loads, 3);
         }
     }

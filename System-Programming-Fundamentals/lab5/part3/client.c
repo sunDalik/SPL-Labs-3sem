@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
     read(fd, &sys_info, sizeof(struct system_info));
 
     printf("Data received:\n");
-    printf("time = %lu\n", sys_info.startup_time);
+    printf("time = %lu\n", sys_info.time_working);
     printf("pid = %u\n", sys_info.pid);
     printf("uid = %u\n", sys_info.uid);
     printf("gid = %u\n", sys_info.gid);
