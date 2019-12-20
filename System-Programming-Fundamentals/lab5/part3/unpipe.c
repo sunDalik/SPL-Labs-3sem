@@ -32,5 +32,6 @@ int main(int argc, char **argv) {
         }
         close(pipe_fd_wr);
     }
+    close(fd);
     return EXIT_SUCCESS;
 }

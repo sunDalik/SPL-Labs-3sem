@@ -3,28 +3,24 @@ use strict;
 use warnings qw(FATAL all);
 
 $ENV{PATH} = '/usr/bin';
-$ENV{CDPATH} = "";
-$ENV{ENV} = "";
-$ENV{BASH_ENV} = '/usr/share/Modules/init/bash';
-
-my $filename = shift @ARGV;
-die "Usage: $0 file\n" if !$filename;
+my $filename = shift @ARGV or die "Usage: $0 file\n";
 
 open my $fd, '<', $filename or die "Can't open $filename!\n";
-pipe my $pipefd_rd, my $pipefd_wr or die "Can't create a pipe!\n";
+pipe my $pipe_fd_rd, my $pipe_fd_wr;
 
 my $pid = fork();
-if (!$pid) {
-    close $pipefd_wr or die "Can't close parent's end of the pipe!\n";
-    open STDIN, '<&', $pipefd_rd or die "Can't replace STDIN with the pipe!\n";
-
-    exec "wc -c" or die "Can't execute wc!\n";
+if ($pid == 0) {
+    close $pipe_fd_wr;
+    open STDIN, '<&', $pipe_fd_rd;
+    exec "wc";
 }
 else {
-    close $pipefd_rd or die "Can't close child's end of the pipe!\n";
-
-    my $buf = "";
-    while (read $fd, $buf, 2) {
-        print $pipefd_wr substr($buf, 1, 1);
+    close $pipe_fd_rd;
+    my $file_char;
+    while (read $fd, $file_char, 1) {
+        print $pipe_fd_wr $file_char;
+        read $fd, $file_char, 1;
     }
+    close $pipe_fd_wr;
 }
+close($fd);
