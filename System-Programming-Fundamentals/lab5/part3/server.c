@@ -19,8 +19,8 @@ void handle_signals(int sig) {
     printf("uid = %u\n", sys_info->uid);
     printf("gid = %u\n", sys_info->gid);
     printf("average system load in 1min = %f\n", sys_info->sys_loads[0]);
-    printf("average system load in 2min = %f\n", sys_info->sys_loads[1]);
-    printf("average system load in 5min = %f\n", sys_info->sys_loads[2]);
+    printf("average system load in 5min = %f\n", sys_info->sys_loads[1]);
+    printf("average system load in 15min = %f\n", sys_info->sys_loads[2]);
     printf("Server terminated\n");
     exit(0);
 }
