@@ -54,6 +54,7 @@ int main(int argc, char *argv[]) {
                 exit(EXIT_FAILURE);
         }
     }
+
     pthread_mutex_init(&mutex, NULL);
 
     pthread_t thread1, thread2;

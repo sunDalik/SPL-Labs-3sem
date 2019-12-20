@@ -10,7 +10,6 @@ sem_t sem;
 
 void lock() {
     sem_wait(&sem);
-
 }
 
 void unlock() {
@@ -45,5 +44,4 @@ int main() {
     pthread_create(&thread2, NULL, invert_alphabet, NULL);
 
     pthread_join(thread1, NULL);
-    pthread_join(thread2, NULL);
 }

@@ -8,7 +8,7 @@
 
 pthread_rwlock_t rwlock = PTHREAD_RWLOCK_INITIALIZER;
 
-int invert_interval = 100, change_case_interval = 200, main_interval = 1000, upper_count_interval = 10;
+int invert_interval = 100, change_case_interval = 200, main_interval = 1000, upper_count_interval = 500;
 
 void lock() {
     pthread_rwlock_wrlock(&rwlock);
@@ -39,10 +39,9 @@ void *invert_alphabet() {
 void *uppercase_count() {
     while (1) {
         usleep(upper_count_interval);
-        pthread_rwlock_rdlock(&rwlock);
-        int upper = count_uppercase();
-        printf("\nUppercase symbols: %d\n", upper);
-        pthread_rwlock_unlock(&rwlock);
+        lock();
+        printf("\nUppercase symbols: %d\n", count_uppercase());
+        unlock();
     }
 }
 
