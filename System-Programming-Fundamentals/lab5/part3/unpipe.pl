@@ -1,11 +1,10 @@
 #!/usr/bin/perl -T
-
 use strict;
 use warnings qw(FATAL all);
 
 $ENV{PATH} = '/usr/bin';
-$ENV{CDPATH}="";
-$ENV{ENV}="";
+$ENV{CDPATH} = "";
+$ENV{ENV} = "";
 $ENV{BASH_ENV} = '/usr/share/Modules/init/bash';
 
 my $filename = shift @ARGV;

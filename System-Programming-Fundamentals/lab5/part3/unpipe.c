@@ -3,46 +3,34 @@
 #include <fcntl.h>
 #include <zconf.h>
 
-#define BUFSIZE 4096
-
-void process_file(int fd, int pipefd) {
-    char inbuf[BUFSIZE];
-    char pipebuf[BUFSIZE / 2];
-
-    int bytes_read;
-    while ((bytes_read = read(fd, inbuf, BUFSIZE)) > 0) {
-        int j = 0;
-        for (int i = 0; i < BUFSIZE; i += 2) {
-            pipebuf[j] = inbuf[i];
-            j++;
-        }
-        write(pipefd, pipebuf, bytes_read / 2);
-    }
-    close(pipefd);
-}
-
 int main(int argc, char **argv) {
-    if (argc != 2) {
+    if (argc < 2) {
         fprintf(stderr, "Usage: %s file\n", argv[0]);
-        return 1;
+        return EXIT_FAILURE;
     }
 
-    int fd;
-    fd = open(argv[1], O_RDONLY);
-
-    int pipefd[2];
-    pipe(pipefd);
-    int pipefd_rd = pipefd[0];
-    int pipefd_wr = pipefd[1];
+    int fd = open(argv[1], O_RDONLY);
+    int pipe_fd[2];
+    pipe(pipe_fd);
+    int pipe_fd_rd = pipe_fd[0];
+    int pipe_fd_wr = pipe_fd[1];
 
     int wc_pid = fork();
     if (wc_pid == 0) {
-        close(pipefd_wr);
-        dup2(pipefd_rd, STDIN_FILENO);
-        execlp("wc", "wc", "-c", (char *) NULL);
+        //child process
+        close(pipe_fd_wr);
+        dup2(pipe_fd_rd, STDIN_FILENO);
+        execlp("wc", "wc", NULL);
+        close(pipe_fd_rd);
     } else {
-        close(pipefd_rd);
-        process_file(fd, pipefd_wr);
+        //parent process
+        close(pipe_fd_rd);
+        char file_char;
+        while (read(fd, &file_char, 1) > 0) {
+            write(pipe_fd_wr, &file_char, 1);
+            read(fd, &file_char, 1); //skip one symbol
+        }
+        close(pipe_fd_wr);
     }
-    return 0;
+    return EXIT_SUCCESS;
 }
