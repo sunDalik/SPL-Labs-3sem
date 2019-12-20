@@ -16,7 +16,7 @@ void unlock() {
     pthread_rwlock_unlock(&rwlock);
 }
 
-void *inv_f(void *args) {
+void *change_case(void *args) {
     int *interval = (int *) args;
     while (1) {
         usleep(*interval);
@@ -26,7 +26,7 @@ void *inv_f(void *args) {
     }
 }
 
-void *swp_f(void *args) {
+void *invert_alphabet(void *args) {
     int *interval = (int *) args;
     while (1) {
         usleep(*interval);
@@ -98,8 +98,8 @@ int main(int argc, char *argv[]) {
     pthread_create(&cnt_thread, NULL, cnt_f, (void *) &cnt_interval);
 
     // THREADS INIT
-    pthread_create(&inv_thread, NULL, inv_f, (void *) &inv_interval);
-    pthread_create(&swp_thread, NULL, swp_f, (void *) &swp_interval);
+    pthread_create(&inv_thread, NULL, change_case, (void *) &inv_interval);
+    pthread_create(&swp_thread, NULL, invert_alphabet, (void *) &swp_interval);
 
     while (1) {
         usleep(main_interval);
