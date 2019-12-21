@@ -3,7 +3,7 @@ use strict;
 use warnings qw(FATAL all);
 
 $ENV{PATH} = '/usr/bin';
-$ENV{ENV}="";
+$ENV{ENV} = "";
 
 my $filename = shift @ARGV or die "Usage: $0 file\n";
 

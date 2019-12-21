@@ -37,5 +37,8 @@ part3_server:
 part3_unpipe:
 	$(GCC) $(FLAGS) -o part3_unpipe part3/unpipe.c
 
+add_task:
+	$(GCC) $(FLAGS) -o add_task additional/main.c
+
 clean: 
-	 rm -f part1_client part1_server part2_mutex part2_rw part2_sem_posix part2_sem_sysv part3_client part3_server part3_unpipe
+	 rm -f part1_client part1_server part2_mutex part2_rw part2_sem_posix part2_sem_sysv part3_client part3_server part3_unpipe add_task
