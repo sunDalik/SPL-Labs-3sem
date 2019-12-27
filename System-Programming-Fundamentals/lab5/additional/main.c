@@ -53,12 +53,12 @@ uint64_t fibonacci(uint64_t n) {
     return fibonacci(n - 1) + fibonacci(n - 2);
 }
 
-void bubble_sort(uint64_t arr[], int n) {
+void bubble_sort(uint32_t arr[], int n) {
     int i, j;
     for (i = 0; i < n - 1; i++)
         for (j = 0; j < n - i - 1; j++) {
             if (arr[j] > arr[j + 1]) {
-                int temp = arr[j];
+                uint32_t temp = arr[j];
                 arr[j] = arr[j + 1];
                 arr[j + 1] = temp;
             }
@@ -66,15 +66,15 @@ void bubble_sort(uint64_t arr[], int n) {
 }
 
 void write_tmessage(int fd, TMessage message) {
-    write(fd, &message.Type, sizeof(uint8_t));
-    write(fd, &message.Size, sizeof(uint64_t));
+    write(fd, &message.Type, sizeof(message.Type));
+    write(fd, &message.Size, sizeof(message.Size));
     write(fd, message.Data, message.Size);
 }
 
 TMessage read_tmessage(int fd) {
     TMessage message;
-    if (read_all(fd, &message.Type, sizeof(uint8_t)) == false) return empty_message;
-    if (read_all(fd, &message.Size, sizeof(uint64_t)) == false) return empty_message;
+    if (read_all(fd, &message.Type, sizeof(message.Type)) == false) return empty_message;
+    if (read_all(fd, &message.Size, sizeof(message.Size)) == false) return empty_message;
     message.Data = calloc(message.Size, 1);
     if (read_all(fd, message.Data, message.Size) == false) return empty_message;
     return message;
@@ -95,7 +95,7 @@ void *reader() {
         TMessage out_msg;
         out_msg.Type = msg.Type;
         out_msg.Size = msg.Size;
-        uint64_t result;
+        uint32_t result;
         switch (msg.Type) {
             case FIBONACCI:
                 result = fibonacci(*msg.Data);
@@ -106,7 +106,7 @@ void *reader() {
                 out_msg.Data = &result;
                 break;
             case BUBBLE_SORT_UINT64:
-                bubble_sort(msg.Data, msg.Size / 8);
+                bubble_sort(msg.Data, msg.Size / 4);
                 out_msg.Data = msg.Data;
                 break;
             case STOP:

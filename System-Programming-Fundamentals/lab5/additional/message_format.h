@@ -12,6 +12,6 @@ typedef enum {
 
 typedef struct __attribute__((__packed__)) {
     uint8_t Type;
-    uint64_t Size;
-    uint64_t *Data;
+    uint32_t Size;
+    uint32_t *Data;
 } TMessage;
