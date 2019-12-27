@@ -33,7 +33,7 @@ if ($type == 2) {
 
     while (@ARGV) {
         my $num = shift @ARGV;
-        print STDERR " $num";
+        #print STDERR " $num";
         print pack 'Q<', $num;
     }
     #print STDERR "\n";

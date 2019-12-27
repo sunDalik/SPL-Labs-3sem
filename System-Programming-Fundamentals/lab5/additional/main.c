@@ -53,8 +53,16 @@ uint64_t fibonacci(uint64_t n) {
     return fibonacci(n - 1) + fibonacci(n - 2);
 }
 
-void bubble_sort() {
-    //?
+void bubble_sort(uint64_t arr[], int n) {
+    int i, j;
+    for (i = 0; i < n - 1; i++)
+        for (j = 0; j < n - i - 1; j++) {
+            if (arr[j] > arr[j + 1]) {
+                int temp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = temp;
+            }
+        }
 }
 
 void write_tmessage(int fd, TMessage message) {
@@ -74,7 +82,6 @@ TMessage read_tmessage(int fd) {
 
 void *writer() {
     while (1) {
-        //usleep(1000);
         TMessage msg;
         if (read_all(pipe_fd[0], &msg, sizeof(TMessage)) > 0) {
             write_tmessage(fileno(result_log_file), msg);
@@ -86,29 +93,29 @@ void *reader() {
     while (1) {
         TMessage msg = read_tmessage(STDIN_FILENO);
         TMessage out_msg;
+        out_msg.Type = msg.Type;
+        out_msg.Size = msg.Size;
         uint64_t result;
         switch (msg.Type) {
             case FIBONACCI:
-                result = fibonacci(*((uint64_t *) msg.Data));
-                out_msg.Type = FIBONACCI;
-                out_msg.Size = 8;
-                out_msg.Data = (u_int8_t *) &result;
-                write(pipe_fd[1], &out_msg, sizeof(TMessage));
+                result = fibonacci(*msg.Data);
+                out_msg.Data = &result;
                 break;
             case POW:
-                result = pow(*((uint64_t *) msg.Data), *(((uint64_t *) msg.Data) + 1));
-                out_msg.Type = POW;
-                out_msg.Size = 8;
-                out_msg.Data = (u_int8_t *) &result;
-                write(pipe_fd[1], &out_msg, sizeof(TMessage));
+                result = pow(*msg.Data, *(msg.Data + 1));
+                out_msg.Data = &result;
                 break;
             case BUBBLE_SORT_UINT64:
-
+                bubble_sort(msg.Data, msg.Size / 8);
+                out_msg.Data = msg.Data;
                 break;
             case STOP:
 
                 break;
+            case NONE:
+                return 0;
         }
+        write(pipe_fd[1], &out_msg, sizeof(TMessage));
 
 
         switch (strategy) {
@@ -128,7 +135,7 @@ void *reader() {
 }
 
 int main(int argc, char *argv[]) {
-    empty_message.Type = -1;
+    empty_message.Type = NONE;
 
     static struct option long_options[] = {{"thread_count", required_argument, 0, 't'},
                                            {"strategy",     required_argument, 0, 's'},
