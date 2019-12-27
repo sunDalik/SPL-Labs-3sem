@@ -47,7 +47,7 @@ void unlock() {
     pthread_mutex_unlock(&mutex);
 }
 
-uint64_t fibonacci(uint64_t n) {
+uint32_t fibonacci(uint32_t n) {
     if (n <= 1)
         return 1;
     return fibonacci(n - 1) + fibonacci(n - 2);
@@ -55,7 +55,7 @@ uint64_t fibonacci(uint64_t n) {
 
 void bubble_sort(uint32_t arr[], int n) {
     int i, j;
-    for (i = 0; i < n - 1; i++)
+    for (i = 0; i < n - 1; i++) {
         for (j = 0; j < n - i - 1; j++) {
             if (arr[j] > arr[j + 1]) {
                 uint32_t temp = arr[j];
@@ -63,6 +63,7 @@ void bubble_sort(uint32_t arr[], int n) {
                 arr[j + 1] = temp;
             }
         }
+    }
 }
 
 void write_tmessage(int fd, TMessage message) {
@@ -83,7 +84,8 @@ TMessage read_tmessage(int fd) {
 void *writer() {
     while (1) {
         TMessage msg;
-        if (read_all(pipe_fd[0], &msg, sizeof(TMessage)) > 0) {
+        if (read_all(pipe_fd[0], &msg, sizeof(TMessage)) == true) {
+            printf("%d\n", *msg.Data);
             write_tmessage(fileno(result_log_file), msg);
         }
     }
@@ -109,12 +111,10 @@ void *reader() {
                 bubble_sort(msg.Data, msg.Size / 4);
                 out_msg.Data = msg.Data;
                 break;
-            case STOP:
-
-                break;
             case NONE:
                 return 0;
         }
+        printf("%d\n", *out_msg.Data);
         write(pipe_fd[1], &out_msg, sizeof(TMessage));
 
 
