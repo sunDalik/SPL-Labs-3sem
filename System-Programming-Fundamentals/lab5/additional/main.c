@@ -53,6 +53,10 @@ uint64_t fibonacci(uint64_t n) {
     return fibonacci(n - 1) + fibonacci(n - 2);
 }
 
+void bubble_sort() {
+    //?
+}
+
 void write_tmessage(int fd, TMessage message) {
     write(fd, &message.Type, sizeof(uint8_t));
     write(fd, &message.Size, sizeof(uint64_t));
@@ -69,15 +73,12 @@ TMessage read_tmessage(int fd) {
 }
 
 void *writer() {
-    int i = 1;
     while (1) {
         //usleep(1000);
         TMessage msg;
         if (read_all(pipe_fd[0], &msg, sizeof(TMessage)) > 0) {
             write_tmessage(fileno(result_log_file), msg);
-            printf("))))\n");
         }
-        printf("after alooo %d\n", i++);
     }
 }
 
@@ -91,14 +92,14 @@ void *reader() {
                 result = fibonacci(*((uint64_t *) msg.Data));
                 out_msg.Type = FIBONACCI;
                 out_msg.Size = 8;
-                out_msg.Data = (u_int8_t *) result;
+                out_msg.Data = (u_int8_t *) &result;
                 write(pipe_fd[1], &out_msg, sizeof(TMessage));
                 break;
             case POW:
                 result = pow(*((uint64_t *) msg.Data), *(((uint64_t *) msg.Data) + 1));
                 out_msg.Type = POW;
                 out_msg.Size = 8;
-                out_msg.Data = (u_int8_t *) result;
+                out_msg.Data = (u_int8_t *) &result;
                 write(pipe_fd[1], &out_msg, sizeof(TMessage));
                 break;
             case BUBBLE_SORT_UINT64:
