@@ -11,6 +11,7 @@
 #include <pthread.h>
 #include <math.h>
 #include <fcntl.h>
+#include <signal.h>
 #include "message_format.h"
 
 #define PER_THREAD 1
@@ -30,13 +31,24 @@ TMessage empty_message;
 bool read_all(int fd, void *buf, size_t bytes) {
     size_t bytes_read = 0;
     while (bytes_read < bytes) {
-        int curr_read = read(fd, (char *) buf + bytes_read, bytes - bytes_read);
+        ssize_t curr_read = read(fd, (char *) buf + bytes_read, bytes - bytes_read);
         //EOF
-        if (curr_read == 0)
+        if (curr_read <= 0)
             return false;
         bytes_read += curr_read;
     }
     return true;
+}
+
+void goodbye() {
+    printf("\nGoodbye!\n");
+    pthread_cancel(reader_thread);
+    pthread_cancel(writer_thread);
+    close(pipe_fd[0]);
+    close(pipe_fd[1]);
+    close(fileno(result_log_file));
+    close(fileno(metrics_log_file));
+    exit(EXIT_SUCCESS);
 }
 
 void lock() {
@@ -75,17 +87,23 @@ void write_tmessage(int fd, TMessage message) {
 TMessage read_tmessage(int fd) {
     TMessage message;
     if (read_all(fd, &message.Type, sizeof(message.Type)) == false) return empty_message;
+    printf("read type from fd %d\n", fd);
     if (read_all(fd, &message.Size, sizeof(message.Size)) == false) return empty_message;
+    printf("read size from fd %d\n", fd);
+    printf("size: %d\n", message.Size);
     message.Data = calloc(message.Size, 1);
     if (read_all(fd, message.Data, message.Size) == false) return empty_message;
+    printf("read data from fd %d\n", fd);
+    printf("data: %d\n", *message.Data);
     return message;
 }
 
 void *writer() {
     while (1) {
-        TMessage msg;
-        if (read_all(pipe_fd[0], &msg, sizeof(TMessage)) == true) {
-            printf("%d\n", *msg.Data);
+        printf("writer while start\n");
+        TMessage msg = read_tmessage(pipe_fd[0]);
+        if (msg.Type != NONE) {
+            printf("WRITER writing: %d, type: %d\n", *msg.Data, msg.Type);
             write_tmessage(fileno(result_log_file), msg);
         }
     }
@@ -96,25 +114,30 @@ void *reader() {
         TMessage msg = read_tmessage(STDIN_FILENO);
         TMessage out_msg;
         out_msg.Type = msg.Type;
-        out_msg.Size = msg.Size;
         uint32_t result;
         switch (msg.Type) {
             case FIBONACCI:
                 result = fibonacci(*msg.Data);
+                //printf("fibonacci. n: %d, result: %d \n", *msg.Data, result);
+                out_msg.Size = 4;
                 out_msg.Data = &result;
                 break;
             case POW:
-                result = pow(*msg.Data, *(msg.Data + 1));
+                result = pow(msg.Data[0], msg.Data[1]);
+                //printf("pow. x: %d, p: %d, result: %d \n", msg.Data[0], msg.Data[1], result);
+                out_msg.Size = 4;
                 out_msg.Data = &result;
                 break;
             case BUBBLE_SORT_UINT64:
                 bubble_sort(msg.Data, msg.Size / 4);
+                //printf("bubble sort\n");
+                out_msg.Size = msg.Size;
                 out_msg.Data = msg.Data;
                 break;
             case NONE:
                 return 0;
         }
-        printf("%d\n", *out_msg.Data);
+        printf("READER send to writer thread: %d, type: %d\n", *out_msg.Data, out_msg.Type);
         write(pipe_fd[1], &out_msg, sizeof(TMessage));
 
         switch (strategy) {
@@ -135,6 +158,11 @@ void *reader() {
 
 int main(int argc, char *argv[]) {
     empty_message.Type = NONE;
+    struct sigaction action = {.sa_handler = goodbye, .sa_flags = 0};
+    sigaction(SIGHUP, &action, NULL);
+    sigaction(SIGINT, &action, NULL);
+    sigaction(SIGTERM, &action, NULL);
+    sigaction(SIGKILL, &action, NULL);
 
     static struct option long_options[] = {{"thread_count", required_argument, 0, 't'},
                                            {"strategy",     required_argument, 0, 's'},
@@ -173,3 +201,4 @@ int main(int argc, char *argv[]) {
     pthread_join(writer_thread, NULL);
     return EXIT_SUCCESS;
 }
+

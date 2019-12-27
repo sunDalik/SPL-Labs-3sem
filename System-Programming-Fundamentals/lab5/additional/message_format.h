@@ -3,9 +3,9 @@
 #include <stdint.h>
 
 typedef enum {
-    FIBONACCI = 0,
-    POW = 1,
-    BUBBLE_SORT_UINT64 = 2,
+    FIBONACCI = 1,
+    POW = 2,
+    BUBBLE_SORT_UINT64 = 3,
     NONE = 99
 } EType;
 
