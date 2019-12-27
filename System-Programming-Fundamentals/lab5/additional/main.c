@@ -104,7 +104,6 @@ void *reader() {
                 out_msg.Data = &result;
                 break;
             case POW:
-                printf("%d %d \n", msg.Data[0], msg.Data[1]);
                 result = pow(*msg.Data, *(msg.Data + 1));
                 out_msg.Data = &result;
                 break;

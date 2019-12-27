@@ -14,8 +14,11 @@ if ($type == 0) {
     print_fibonacci(shift @ARGV)
 }
 if ($type == 1) {
-    scalar @ARGV or die "pow: n not specified\n";
-    print_pow(shift @ARGV, shift @ARGV)
+    scalar @ARGV or die "pow: x not specified\n";
+    my $x = shift @ARGV;
+    scalar @ARGV or die "pow: p not specified\n";
+    my $p = shift @ARGV;
+    print_pow($x, $p)
 }
 if ($type == 2) {
     print STDERR scalar @ARGV;
@@ -35,7 +38,7 @@ sub print_fibonacci {
 
 sub print_pow {
     my ($x, $p) = @_;
-    my $msg = pack 'CL<L<L<', $type, 4, $x, $p;
+    my $msg = pack 'CL<L<L<', $type, 8, $x, $p;
     print $msg;
 }
 
