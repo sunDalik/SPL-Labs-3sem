@@ -11,34 +11,42 @@ my $type = shift @ARGV;
 
 if ($type == 0) {
     scalar @ARGV or die "fibonacci: n not specified\n";
-    my $n = shift @ARGV;
-    my $msg = pack 'CL<L<', $type, 4, $n;
-    #print STDERR "fibonacci n=$n\n";
-    print $msg;
+    print_fibonacci(shift @ARGV)
 }
 if ($type == 1) {
     scalar @ARGV or die "pow: n not specified\n";
-    my $n = shift @ARGV;
-    my $msg = pack 'CL<L<', $type, 4, $n;
-    #print STDERR "pow n=$n\n";
-    print $msg;
+    print_pow(shift @ARGV, shift @ARGV)
 }
 if ($type == 2) {
-    scalar @ARGV or die "bubble-sort: len not specified\n";
-    my $len = scalar @ARGV;
-    #print STDERR "bubble-sort len=$len";
-
-    my $msg = pack 'CL<', $type, $len * 4;
-    print $msg;
-
-    while (@ARGV) {
-        my $num = shift @ARGV;
-        #print STDERR " $num";
-        print pack 'L<', $num;
-    }
-    #print STDERR "\n";
+    print STDERR scalar @ARGV;
+    scalar @ARGV or die "bubble_sort: the array is empty\n";
+    print_bubble_sort(@ARGV);
 }
 
 if ($type == -1) {
     #)))
+}
+
+sub print_fibonacci {
+    my ($n) = @_;
+    my $msg = pack 'CL<L<', $type, 4, $n;
+    print $msg;
+}
+
+sub print_pow {
+    my ($x, $p) = @_;
+    my $msg = pack 'CL<L<L<', $type, 4, $x, $p;
+    print $msg;
+}
+
+sub print_bubble_sort {
+    my (@nums) = @_;
+    my $len = scalar @nums;
+    my $msg = pack 'CL<', $type, $len * 4;
+    print $msg;
+
+    while (@nums) {
+        my $num = shift @nums;
+        print pack 'L<', $num;
+    }
 }

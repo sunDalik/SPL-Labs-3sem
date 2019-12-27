@@ -17,7 +17,7 @@
 #define PER_TASK 2
 #define THREAD_POOL 3
 
-int report_interval = 100; //milliseconds
+int metrics_report_interval = 100; //milliseconds
 int thread_count = 3;
 int strategy = PER_THREAD;
 pthread_mutex_t mutex;
@@ -30,7 +30,7 @@ TMessage empty_message;
 bool read_all(int fd, void *buf, size_t bytes) {
     size_t bytes_read = 0;
     while (bytes_read < bytes) {
-        int curr_read = read(fd, buf + bytes_read, bytes - bytes_read);
+        int curr_read = read(fd, (char *) buf + bytes_read, bytes - bytes_read);
         //EOF
         if (curr_read == 0)
             return false;
@@ -104,6 +104,7 @@ void *reader() {
                 out_msg.Data = &result;
                 break;
             case POW:
+                printf("%d %d \n", msg.Data[0], msg.Data[1]);
                 result = pow(*msg.Data, *(msg.Data + 1));
                 out_msg.Data = &result;
                 break;
@@ -144,7 +145,7 @@ int main(int argc, char *argv[]) {
     while ((opt = getopt_long(argc, argv, "t:s:n:", long_options, NULL)) != -1) {
         switch (opt) {
             case 'n':
-                report_interval = (int) strtol(optarg, NULL, 10);
+                metrics_report_interval = (int) strtol(optarg, NULL, 10);
                 break;
             case 't':
                 thread_count = (int) strtol(optarg, NULL, 10);
