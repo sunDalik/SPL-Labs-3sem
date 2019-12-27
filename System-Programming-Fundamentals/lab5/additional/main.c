@@ -117,7 +117,6 @@ void *reader() {
         printf("%d\n", *out_msg.Data);
         write(pipe_fd[1], &out_msg, sizeof(TMessage));
 
-
         switch (strategy) {
             case PER_THREAD:
                 //create new thread for each task

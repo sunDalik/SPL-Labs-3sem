@@ -21,13 +21,32 @@ if ($type == 1) {
     print_pow($x, $p)
 }
 if ($type == 2) {
-    print STDERR scalar @ARGV;
     scalar @ARGV or die "bubble_sort: the array is empty\n";
     print_bubble_sort(@ARGV);
 }
-
 if ($type == -1) {
-    #)))
+    scalar @ARGV or die "rnd: message amount not specified\n";
+    my $len = shift @ARGV;
+    for (my $i = 0; $i < $len; $i++) {
+        $type = int(rand 3);
+        if ($type == 0) {
+            my $n = int(rand 20) + 1;
+            print_fibonacci($n)
+        }
+        if ($type == 1) {
+            my $x = int(rand 10) + 1;
+            my $p = int(rand 4) + 1;
+            print_pow($x, $p)
+        }
+        if ($type == 2) {
+            my @arr;
+            my $arr_len = int(rand 17) + 4;
+            for (my $j = 0; $j < $arr_len; $j++) {
+                @arr[$j] = int(rand 100);
+            }
+            print_bubble_sort(@arr);
+        }
+    }
 }
 
 sub print_fibonacci {
