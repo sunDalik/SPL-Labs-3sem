@@ -45,8 +45,17 @@ void goodbye() {
     printf("\nGoodbye!\n");
     pthread_cancel(reader_thread);
     pthread_cancel(writer_thread);
+    pthread_cancel(fib_task_thread);
+    pthread_cancel(pow_task_thread);
+    pthread_cancel(bubble_task_thread);
     close(writer_pipe[0]);
     close(writer_pipe[1]);
+    close(fib_task_pipe[0]);
+    close(fib_task_pipe[1]);
+    close(pow_task_pipe[0]);
+    close(pow_task_pipe[1]);
+    close(bubble_task_pipe[0]);
+    close(bubble_task_pipe[1]);
     close(fileno(result_log_file));
     exit(EXIT_SUCCESS);
 }
@@ -111,26 +120,45 @@ void *writer() {
     }
 }
 
+TMessage *make_out_fib_message(TMessage msg) {
+    TMessage *out_msg = malloc(sizeof(TMessage));
+    out_msg->Type = FIBONACCI;
+    uint32_t result = fibonacci(*msg.Data);
+    out_msg->Size = 4;
+    out_msg->Data = &result;
+    return out_msg;
+}
+
+TMessage *make_out_pow_message(TMessage msg) {
+    TMessage *out_msg = malloc(sizeof(TMessage));
+    out_msg->Type = POW;
+    uint32_t result = pow(msg.Data[0], msg.Data[1]);
+    out_msg->Size = 4;
+    out_msg->Data = &result;
+    return out_msg;
+}
+
+TMessage *make_out_bubble_message(TMessage msg) {
+    TMessage *out_msg = malloc(sizeof(TMessage));
+    out_msg->Type = POW;
+    bubble_sort(msg.Data, msg.Size / 4);
+    out_msg->Size = msg.Size;
+    out_msg->Data = msg.Data;
+    return out_msg;
+}
+
 void *handle_tmessage(void *args) {
     TMessage msg = *((TMessage *) args);
     TMessage *out_msg = malloc(sizeof(TMessage));
-    out_msg->Type = msg.Type;
-    uint32_t result;
     switch (msg.Type) {
         case FIBONACCI:
-            result = fibonacci(*msg.Data);
-            out_msg->Size = 4;
-            out_msg->Data = &result;
+            out_msg = make_out_fib_message(msg);
             break;
         case POW:
-            result = pow(msg.Data[0], msg.Data[1]);
-            out_msg->Size = 4;
-            out_msg->Data = &result;
+            out_msg = make_out_pow_message(msg);
             break;
         case BUBBLE_SORT:
-            bubble_sort(msg.Data, msg.Size / 4);
-            out_msg->Size = msg.Size;
-            out_msg->Data = msg.Data;
+            out_msg = make_out_bubble_message(msg);
             break;
         case NONE:
             return 0;
@@ -144,11 +172,7 @@ void *handle_fib() {
     while (1) {
         TMessage msg = read_tmessage(fib_task_pipe[0]);
         if (msg.Type == FIBONACCI) {
-            TMessage *out_msg = malloc(sizeof(TMessage));
-            out_msg->Type = msg.Type;
-            uint32_t result = fibonacci(*msg.Data);
-            out_msg->Size = 4;
-            out_msg->Data = &result;
+            TMessage *out_msg = make_out_fib_message(msg);
             printf("THREAD ID %ld: Send to writer thread: data %d, type %d\n", pthread_self(), *out_msg->Data,
                    out_msg->Type);
             write(writer_pipe[1], out_msg, sizeof(TMessage));
@@ -160,11 +184,7 @@ void *handle_pow() {
     while (1) {
         TMessage msg = read_tmessage(pow_task_pipe[0]);
         if (msg.Type == POW) {
-            TMessage *out_msg = malloc(sizeof(TMessage));
-            out_msg->Type = msg.Type;
-            uint32_t result = pow(msg.Data[0], msg.Data[1]);
-            out_msg->Size = 4;
-            out_msg->Data = &result;
+            TMessage *out_msg = make_out_pow_message(msg);
             printf("THREAD ID %ld: Send to writer thread: data %d, type %d\n", pthread_self(), *out_msg->Data,
                    out_msg->Type);
             write(writer_pipe[1], out_msg, sizeof(TMessage));
@@ -176,11 +196,7 @@ void *handle_bubble() {
     while (1) {
         TMessage msg = read_tmessage(bubble_task_pipe[0]);
         if (msg.Type == BUBBLE_SORT) {
-            TMessage *out_msg = malloc(sizeof(TMessage));
-            out_msg->Type = msg.Type;
-            bubble_sort(msg.Data, msg.Size / 4);
-            out_msg->Size = msg.Size;
-            out_msg->Data = msg.Data;
+            TMessage *out_msg = make_out_bubble_message(msg);
             printf("THREAD ID %ld: Send to writer thread: data %d, type %d\n", pthread_self(), *out_msg->Data,
                    out_msg->Type);
             write(writer_pipe[1], out_msg, sizeof(TMessage));
