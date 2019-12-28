@@ -18,14 +18,15 @@
 #define PER_TASK 2
 #define THREAD_POOL 3
 
-int metrics_report_interval = 100; //milliseconds
 int thread_count = 3;
 int strategy = PER_THREAD;
 pthread_mutex_t mutex;
-pthread_t reader_thread, writer_thread;
-int pipe_fd[2];
+pthread_t reader_thread, writer_thread, fib_task_thread, pow_task_thread, bubble_task_thread;
+int writer_pipe[2];
+int fib_task_pipe[2];
+int pow_task_pipe[2];
+int bubble_task_pipe[2];
 FILE *result_log_file;
-FILE *metrics_log_file;
 TMessage empty_message;
 
 bool read_all(int fd, void *buf, size_t bytes) {
@@ -44,10 +45,9 @@ void goodbye() {
     printf("\nGoodbye!\n");
     pthread_cancel(reader_thread);
     pthread_cancel(writer_thread);
-    close(pipe_fd[0]);
-    close(pipe_fd[1]);
+    close(writer_pipe[0]);
+    close(writer_pipe[1]);
     close(fileno(result_log_file));
-    close(fileno(metrics_log_file));
     exit(EXIT_SUCCESS);
 }
 
@@ -85,28 +85,105 @@ void write_tmessage(int fd, TMessage message) {
 }
 
 TMessage read_to_tmessage(int fd) {
-    TMessage message;
-    if (read_all(fd, &message.Type, sizeof(message.Type)) == false) return empty_message;
-    if (read_all(fd, &message.Size, sizeof(message.Size)) == false) return empty_message;
-    message.Data = calloc(message.Size, 1);
-    if (read_all(fd, message.Data, message.Size) == false) return empty_message;
-    return message;
+    TMessage *message = malloc(sizeof(TMessage));
+    if (read_all(fd, &message->Type, sizeof(message->Type)) == false) return empty_message;
+    if (read_all(fd, &message->Size, sizeof(message->Size)) == false) return empty_message;
+    message->Data = calloc(message->Size, 1);
+    if (read_all(fd, message->Data, message->Size) == false) return empty_message;
+    return *message;
 }
 
 TMessage read_tmessage(int fd) {
-    TMessage message;
-    if (read_all(fd, &message.Type, sizeof(message.Type)) == false) return empty_message;
-    if (read_all(fd, &message.Size, sizeof(message.Size)) == false) return empty_message;
-    if (read_all(fd, &message.Data, sizeof(message.Data)) == false) return empty_message;
-    return message;
+    TMessage *message = malloc(sizeof(TMessage));
+    if (read_all(fd, &message->Type, sizeof(message->Type)) == false) return empty_message;
+    if (read_all(fd, &message->Size, sizeof(message->Size)) == false) return empty_message;
+    if (read_all(fd, &message->Data, sizeof(message->Data)) == false) return empty_message;
+    return *message;
 }
 
 void *writer() {
     while (1) {
-        TMessage msg = read_tmessage(pipe_fd[0]);
+        TMessage msg = read_tmessage(writer_pipe[0]);
         if (msg.Type != NONE) {
-            printf("WRITER writing: %d, type: %d\n", *msg.Data, msg.Type);
+            printf("WRITER: Write data to file: %d, type: %d\n", *msg.Data, msg.Type);
             write_tmessage(fileno(result_log_file), msg);
+        }
+    }
+}
+
+void *handle_tmessage(void *args) {
+    TMessage msg = *((TMessage *) args);
+    TMessage *out_msg = malloc(sizeof(TMessage));
+    out_msg->Type = msg.Type;
+    uint32_t result;
+    switch (msg.Type) {
+        case FIBONACCI:
+            result = fibonacci(*msg.Data);
+            out_msg->Size = 4;
+            out_msg->Data = &result;
+            break;
+        case POW:
+            result = pow(msg.Data[0], msg.Data[1]);
+            out_msg->Size = 4;
+            out_msg->Data = &result;
+            break;
+        case BUBBLE_SORT_UINT64:
+            bubble_sort(msg.Data, msg.Size / 4);
+            out_msg->Size = msg.Size;
+            out_msg->Data = msg.Data;
+            break;
+        case NONE:
+            return 0;
+    }
+    printf("THREAD ID %ld: Send data to writer thread: %d, type: %d\n", pthread_self(), *out_msg->Data, out_msg->Type);
+    write(writer_pipe[1], out_msg, sizeof(TMessage));
+    return 0;
+}
+
+void *handle_fib() {
+    while (1) {
+        TMessage msg = read_tmessage(fib_task_pipe[0]);
+        if (msg.Type == FIBONACCI) {
+            TMessage *out_msg = malloc(sizeof(TMessage));
+            out_msg->Type = msg.Type;
+            uint32_t result = fibonacci(*msg.Data);
+            out_msg->Size = 4;
+            out_msg->Data = &result;
+            printf("THREAD ID %ld: Send data to writer thread: %d, type: %d\n", pthread_self(), *out_msg->Data,
+                   out_msg->Type);
+            write(writer_pipe[1], out_msg, sizeof(TMessage));
+        }
+    }
+}
+
+void *handle_pow() {
+    while (1) {
+        TMessage msg = read_tmessage(fib_task_pipe[0]);
+        if (msg.Type == FIBONACCI) {
+            TMessage *out_msg = malloc(sizeof(TMessage));
+            out_msg->Type = msg.Type;
+            uint32_t result = pow(msg.Data[0], msg.Data[1]);
+            out_msg->Size = 4;
+            out_msg->Data = &result;
+            printf("THREAD ID %ld: Send data to writer thread: %d, type: %d\n", pthread_self(), *out_msg->Data,
+                   out_msg->Type);
+            write(writer_pipe[1], out_msg, sizeof(TMessage));
+        }
+    }
+}
+
+void *handle_bubble() {
+    while (1) {
+        TMessage msg = read_tmessage(fib_task_pipe[0]);
+        if (msg.Type == FIBONACCI) {
+            TMessage *out_msg = malloc(sizeof(TMessage));
+            out_msg->Type = msg.Type;
+            bubble_sort(msg.Data, msg.Size / 4);
+            out_msg->Size = msg.Size;
+            out_msg->Data = msg.Data;
+            printf("THREAD ID %ld: Send data to writer thread: %d, type: %d\n", pthread_self(), *out_msg->Data,
+                   out_msg->Type);
+            write(writer_pipe[1], out_msg, sizeof(TMessage));
         }
     }
 }
@@ -114,39 +191,31 @@ void *writer() {
 void *reader() {
     while (1) {
         TMessage msg = read_to_tmessage(STDIN_FILENO);
-        TMessage out_msg;
-        out_msg.Type = msg.Type;
-        uint32_t result;
-        switch (msg.Type) {
-            case FIBONACCI:
-                result = fibonacci(*msg.Data);
-                out_msg.Size = 4;
-                out_msg.Data = &result;
-                break;
-            case POW:
-                result = pow(msg.Data[0], msg.Data[1]);
-                out_msg.Size = 4;
-                out_msg.Data = &result;
-                break;
-            case BUBBLE_SORT_UINT64:
-                bubble_sort(msg.Data, msg.Size / 4);
-                out_msg.Size = msg.Size;
-                out_msg.Data = msg.Data;
-                break;
-            case NONE:
-                return 0;
-        }
-        printf("READER send to writer thread: %d, type: %d\n", *out_msg.Data, out_msg.Type);
-        write(pipe_fd[1], &out_msg, sizeof(TMessage));
+        if (msg.Type == NONE) return 0;
+        pthread_t new_thread;
 
         switch (strategy) {
             case PER_THREAD:
-                //create new thread for each task
-
-                //pthread_create(&hz, NULL, reader, NULL);
+                printf("READER: Create new thread for the task of type: %d\n", msg.Type);
+                pthread_create(&new_thread, NULL, handle_tmessage, (void *) &msg);
                 break;
             case PER_TASK:
-                //
+                switch (msg.Type) {
+                    case FIBONACCI:
+                        printf("READER: Send task to FIBONACCI thread");
+                        write(fib_task_pipe[1], &msg, sizeof(TMessage));
+                        break;
+                    case POW:
+                        printf("READER: Send task to POW thread");
+                        write(pow_task_pipe[1], &msg, sizeof(TMessage));
+                        break;
+                    case BUBBLE_SORT_UINT64:
+                        printf("READER: Send task to BUBBLE thread");
+                        write(bubble_task_pipe[1], &msg, sizeof(TMessage));
+                        break;
+                    case NONE:
+                        return 0;
+                }
                 break;
             case THREAD_POOL:
                 //
@@ -167,11 +236,8 @@ int main(int argc, char *argv[]) {
                                            {"strategy",     required_argument, 0, 's'},
                                            {NULL, 0, NULL,                        0}};
     int opt = 0;
-    while ((opt = getopt_long(argc, argv, "t:s:n:", long_options, NULL)) != -1) {
+    while ((opt = getopt_long(argc, argv, "t:s:", long_options, NULL)) != -1) {
         switch (opt) {
-            case 'n':
-                metrics_report_interval = (int) strtol(optarg, NULL, 10);
-                break;
             case 't':
                 thread_count = (int) strtol(optarg, NULL, 10);
                 break;
@@ -189,10 +255,18 @@ int main(int argc, char *argv[]) {
 
     pthread_mutex_init(&mutex, NULL);
 
-    pipe(pipe_fd);
+    pipe(writer_pipe);
+    pipe(fib_task_pipe);
+    pipe(pow_task_pipe);
+    pipe(bubble_task_pipe);
 
     result_log_file = fopen("result_log", "w");
-    metrics_log_file = fopen("metrics_log", "w");
+
+    if (strategy == PER_TASK) {
+        pthread_create(&fib_task_thread, NULL, handle_fib, NULL);
+        pthread_create(&pow_task_thread, NULL, handle_pow, NULL);
+        pthread_create(&bubble_task_thread, NULL, handle_bubble, NULL);
+    }
 
     pthread_create(&reader_thread, NULL, reader, NULL);
     pthread_create(&writer_thread, NULL, writer, NULL);
