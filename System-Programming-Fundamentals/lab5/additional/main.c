@@ -84,7 +84,7 @@ void write_tmessage(int fd, TMessage message) {
     write(fd, message.Data, message.Size);
 }
 
-TMessage read_tmessage(int fd) {
+TMessage read_to_tmessage(int fd) {
     TMessage message;
     if (read_all(fd, &message.Type, sizeof(message.Type)) == false) return empty_message;
     printf("read type from fd %d\n", fd);
@@ -95,6 +95,14 @@ TMessage read_tmessage(int fd) {
     if (read_all(fd, message.Data, message.Size) == false) return empty_message;
     printf("read data from fd %d\n", fd);
     printf("data: %d\n", *message.Data);
+    return message;
+}
+
+TMessage read_tmessage(int fd) {
+    TMessage message;
+    if (read_all(fd, &message.Type, sizeof(message.Type)) == false) return empty_message;
+    if (read_all(fd, &message.Size, sizeof(message.Size)) == false) return empty_message;
+    if (read_all(fd, &message.Data, sizeof(message.Data)) == false) return empty_message;
     return message;
 }
 
@@ -111,7 +119,7 @@ void *writer() {
 
 void *reader() {
     while (1) {
-        TMessage msg = read_tmessage(STDIN_FILENO);
+        TMessage msg = read_to_tmessage(STDIN_FILENO);
         TMessage out_msg;
         out_msg.Type = msg.Type;
         uint32_t result;
