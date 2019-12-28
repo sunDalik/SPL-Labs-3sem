@@ -5,7 +5,7 @@
 typedef enum {
     FIBONACCI = 1,
     POW = 2,
-    BUBBLE_SORT_UINT64 = 3,
+    BUBBLE_SORT = 3,
     NONE = 99
 } EType;
 

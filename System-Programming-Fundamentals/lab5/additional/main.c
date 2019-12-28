@@ -105,7 +105,7 @@ void *writer() {
     while (1) {
         TMessage msg = read_tmessage(writer_pipe[0]);
         if (msg.Type != NONE) {
-            printf("WRITER: Write data to file: %d, type: %d\n", *msg.Data, msg.Type);
+            printf("WRITER: Write to file: data %d, type %d\n", *msg.Data, msg.Type);
             write_tmessage(fileno(result_log_file), msg);
         }
     }
@@ -127,7 +127,7 @@ void *handle_tmessage(void *args) {
             out_msg->Size = 4;
             out_msg->Data = &result;
             break;
-        case BUBBLE_SORT_UINT64:
+        case BUBBLE_SORT:
             bubble_sort(msg.Data, msg.Size / 4);
             out_msg->Size = msg.Size;
             out_msg->Data = msg.Data;
@@ -135,7 +135,7 @@ void *handle_tmessage(void *args) {
         case NONE:
             return 0;
     }
-    printf("THREAD ID %ld: Send data to writer thread: %d, type: %d\n", pthread_self(), *out_msg->Data, out_msg->Type);
+    printf("THREAD ID %ld: Send to writer thread: data %d, type %d\n", pthread_self(), *out_msg->Data, out_msg->Type);
     write(writer_pipe[1], out_msg, sizeof(TMessage));
     return 0;
 }
@@ -149,7 +149,7 @@ void *handle_fib() {
             uint32_t result = fibonacci(*msg.Data);
             out_msg->Size = 4;
             out_msg->Data = &result;
-            printf("THREAD ID %ld: Send data to writer thread: %d, type: %d\n", pthread_self(), *out_msg->Data,
+            printf("THREAD ID %ld: Send to writer thread: data %d, type %d\n", pthread_self(), *out_msg->Data,
                    out_msg->Type);
             write(writer_pipe[1], out_msg, sizeof(TMessage));
         }
@@ -158,14 +158,14 @@ void *handle_fib() {
 
 void *handle_pow() {
     while (1) {
-        TMessage msg = read_tmessage(fib_task_pipe[0]);
-        if (msg.Type == FIBONACCI) {
+        TMessage msg = read_tmessage(pow_task_pipe[0]);
+        if (msg.Type == POW) {
             TMessage *out_msg = malloc(sizeof(TMessage));
             out_msg->Type = msg.Type;
             uint32_t result = pow(msg.Data[0], msg.Data[1]);
             out_msg->Size = 4;
             out_msg->Data = &result;
-            printf("THREAD ID %ld: Send data to writer thread: %d, type: %d\n", pthread_self(), *out_msg->Data,
+            printf("THREAD ID %ld: Send to writer thread: data %d, type %d\n", pthread_self(), *out_msg->Data,
                    out_msg->Type);
             write(writer_pipe[1], out_msg, sizeof(TMessage));
         }
@@ -174,14 +174,14 @@ void *handle_pow() {
 
 void *handle_bubble() {
     while (1) {
-        TMessage msg = read_tmessage(fib_task_pipe[0]);
-        if (msg.Type == FIBONACCI) {
+        TMessage msg = read_tmessage(bubble_task_pipe[0]);
+        if (msg.Type == BUBBLE_SORT) {
             TMessage *out_msg = malloc(sizeof(TMessage));
             out_msg->Type = msg.Type;
             bubble_sort(msg.Data, msg.Size / 4);
             out_msg->Size = msg.Size;
             out_msg->Data = msg.Data;
-            printf("THREAD ID %ld: Send data to writer thread: %d, type: %d\n", pthread_self(), *out_msg->Data,
+            printf("THREAD ID %ld: Send to writer thread: data %d, type %d\n", pthread_self(), *out_msg->Data,
                    out_msg->Type);
             write(writer_pipe[1], out_msg, sizeof(TMessage));
         }
@@ -193,29 +193,31 @@ void *reader() {
         TMessage msg = read_to_tmessage(STDIN_FILENO);
         if (msg.Type == NONE) return 0;
         pthread_t new_thread;
+        char *name = "";
 
         switch (strategy) {
             case PER_THREAD:
-                printf("READER: Create new thread for the task of type: %d\n", msg.Type);
+                printf("READER: Create new thread for the task of type %d\n", msg.Type);
                 pthread_create(&new_thread, NULL, handle_tmessage, (void *) &msg);
                 break;
             case PER_TASK:
                 switch (msg.Type) {
                     case FIBONACCI:
-                        printf("READER: Send task to FIBONACCI thread");
+                        name = "FIBONACCI";
                         write(fib_task_pipe[1], &msg, sizeof(TMessage));
                         break;
                     case POW:
-                        printf("READER: Send task to POW thread");
+                        name = "POW";
                         write(pow_task_pipe[1], &msg, sizeof(TMessage));
                         break;
-                    case BUBBLE_SORT_UINT64:
-                        printf("READER: Send task to BUBBLE thread");
+                    case BUBBLE_SORT:
+                        name = "BUBBLE";
                         write(bubble_task_pipe[1], &msg, sizeof(TMessage));
                         break;
                     case NONE:
                         return 0;
                 }
+                printf("READER: Send task to %s thread: data %d, type %d\n", name, *msg.Data, msg.Type);
                 break;
             case THREAD_POOL:
                 //
