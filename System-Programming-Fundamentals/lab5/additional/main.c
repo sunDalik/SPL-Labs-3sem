@@ -41,6 +41,11 @@ bool read_all(int fd, void *buf, size_t bytes) {
     return true;
 }
 
+void close_pipe(int pipe_fd[]) {
+    close(pipe_fd[0]);
+    close(pipe_fd[1]);
+}
+
 void goodbye() {
     printf("\nGoodbye!\n");
     pthread_cancel(reader_thread);
@@ -48,14 +53,10 @@ void goodbye() {
     pthread_cancel(fib_task_thread);
     pthread_cancel(pow_task_thread);
     pthread_cancel(bubble_task_thread);
-    close(writer_pipe[0]);
-    close(writer_pipe[1]);
-    close(fib_task_pipe[0]);
-    close(fib_task_pipe[1]);
-    close(pow_task_pipe[0]);
-    close(pow_task_pipe[1]);
-    close(bubble_task_pipe[0]);
-    close(bubble_task_pipe[1]);
+    close_pipe(writer_pipe);
+    close_pipe(fib_task_pipe);
+    close_pipe(pow_task_pipe);
+    close_pipe(bubble_task_pipe);
     close(fileno(result_log_file));
     exit(EXIT_SUCCESS);
 }
