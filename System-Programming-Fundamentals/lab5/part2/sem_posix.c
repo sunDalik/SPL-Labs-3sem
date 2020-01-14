@@ -5,6 +5,9 @@
 #include <pthread.h>
 #include <sys/ipc.h>
 #include <semaphore.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <values.h>
 
 sem_t sem;
 

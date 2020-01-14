@@ -141,7 +141,7 @@ TMessage *make_out_pow_message(TMessage msg) {
 
 TMessage *make_out_bubble_message(TMessage msg) {
     TMessage *out_msg = malloc(sizeof(TMessage));
-    out_msg->Type = POW;
+    out_msg->Type = BUBBLE_SORT;
     bubble_sort(msg.Data, msg.Size / 4);
     out_msg->Size = msg.Size;
     out_msg->Data = msg.Data;
@@ -293,4 +293,3 @@ int main(int argc, char *argv[]) {
     pthread_join(writer_thread, NULL);
     return EXIT_SUCCESS;
 }
-
