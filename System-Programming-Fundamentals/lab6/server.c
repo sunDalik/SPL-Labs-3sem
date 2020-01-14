@@ -54,12 +54,14 @@ void *worker(void *thread_info) {
     server_thread *meta = (server_thread *) thread_info;
     while (1) {
         while (1) {
-            usleep(1000);
+            usleep(5000);
             if (meta->busy && meta->client_fd >= 0) break;
         }
 
         int client_fd = meta->client_fd;
-        printf("Thread %d: client %d connected.\n", meta->id, client_fd);
+        printf("Thread #%d: client %d connected.\n", meta->id, client_fd);
+
+        //sleep(10);
 
         int request_len;
         char *paths = read_request(client_fd, &request_len);
@@ -167,10 +169,9 @@ int main(int argc, char **argv) {
     while (1) {
         server_thread *free_thread;
         if ((free_thread = get_free_thread(thread_pool, (int) thread_count)) != NULL) {
-            printf("found free thread\n");
             int client_fd = accept(sock_fd, NULL, NULL);
-            printf("found client\n");
             free_thread->client_fd = client_fd;
         }
+        usleep(1000);
     }
 }
