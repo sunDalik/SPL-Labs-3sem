@@ -54,9 +54,7 @@ void *worker(void *thread_info) {
     server_thread *meta = (server_thread *) thread_info;
     while (1) {
         while (1) {
-            //usleep(5000);
-            if (meta->busy) printf("busy\n");
-            if (meta->client_fd >= 0) printf("clifd\n");
+            usleep(1000);
             if (meta->busy && meta->client_fd >= 0) break;
         }
 
@@ -114,7 +112,7 @@ bool parse_ushort(const char *str, unsigned short *val) {
 server_thread *get_free_thread(server_thread *thread_pool, int thread_pool_size) {
     for (int i = 0; i < thread_pool_size; i++) {
         if (!thread_pool[i].busy) {
-            thread_pool[i].busy = false;
+            thread_pool[i].busy = true;
             return &thread_pool[i];
         }
     }
@@ -139,12 +137,10 @@ int main(int argc, char **argv) {
     // init worker pool
     server_thread thread_pool[thread_count];
     for (int i = 0; i < thread_count; ++i) {
-        server_thread *thread = calloc(1, sizeof(server_thread));
-        thread->id = i;
-        thread->busy = false;
-        thread->client_fd = -1;
-        pthread_create(&thread->worker, NULL, worker, (void *) thread);
-        thread_pool[i] = *thread;
+        thread_pool[i].id = i;
+        thread_pool[i].busy = false;
+        thread_pool[i].client_fd = -1;
+        pthread_create(&thread_pool[i].worker, NULL, worker, (void *) &thread_pool[i]);
     }
 
     // init server socket
