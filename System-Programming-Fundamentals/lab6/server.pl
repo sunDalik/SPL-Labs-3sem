@@ -41,7 +41,7 @@ my @clients;
 while (1) {
     if ((my $free_thread_id = get_free_thread()) != -1) {
         my $clt = $server->accept();
-        push @clients, $clt;
+        $clients[$free_thread_id] = $clt;
         $thread_pool[$free_thread_id]->[$client_i] = fileno($clt);
     }
     usleep(1000);
@@ -50,6 +50,9 @@ while (1) {
 sub get_free_thread {
     for (my $i = 0; $i < $thread_count; $i++) {
         if ($thread_pool[$i]->[$busy_i] == 0) {
+            if (defined($clients[$i])) {
+                close $clients[$i];
+            }
             $thread_pool[$i]->[$busy_i] = 1;
             return $i;
         }
