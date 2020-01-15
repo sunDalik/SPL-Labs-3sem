@@ -54,8 +54,8 @@ void *worker(void *thread_info) {
     server_thread *meta = (server_thread *) thread_info;
     while (1) {
         while (1) {
-            usleep(5000);
             if (meta->busy && meta->client_fd >= 0) break;
+            usleep(5000);
         }
 
         int client_fd = meta->client_fd;
