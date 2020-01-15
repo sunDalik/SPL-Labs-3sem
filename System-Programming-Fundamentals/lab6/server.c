@@ -61,6 +61,7 @@ void *worker(void *thread_info) {
         int client_fd = meta->client_fd;
         printf("Thread #%d: client %d connected.\n", meta->id, client_fd);
 
+        //dprintf(client_fd, "Hello client...\r\n");
         //sleep(10);
 
         int request_len;
@@ -130,7 +131,7 @@ int main(int argc, char **argv) {
     }
 
     // get worker count from args
-    unsigned short thread_count = 3;
+    unsigned short thread_count = 2;
     if (argc >= 3 && !parse_ushort(argv[2], &thread_count)) {
         fprintf(stderr, "Usage: %s port [thread_count]\n", argv[0]);
         return EXIT_FAILURE;
