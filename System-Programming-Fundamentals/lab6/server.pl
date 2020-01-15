@@ -5,7 +5,6 @@ use warnings qw(FATAL all);
 use threads;
 use threads::shared;
 use IO::Socket::INET;
-use Class::Struct;
 use Time::HiRes qw(usleep);
 
 my $USAGE = "Usage $0 port [thread_count]\n";
@@ -17,20 +16,19 @@ if (scalar @ARGV) {
     ($thread_count) = shift(@ARGV) =~ /(\d+)/ or die $USAGE;
 }
 
-struct(server_thread => {
-    worker => '$',
-    busy   => '$',
-    client => '$',
-    id     => '$',
-});
+my $busy_i :shared = 0;
+my $client_i :shared = 1;
+my $id_i :shared = 2;
 
 my @thread_pool :shared;
 for (my $i = 0; $i < $thread_count; $i++) {
-    $thread_pool[$i] = share(server_thread->new());
-    $thread_pool[$i]->busy(0);
-    $thread_pool[$i]->client(-1);
-    $thread_pool[$i]->id($i);
-    $thread_pool[$i]->worker(threads->create(\&worker, $i)->detach());
+    my @server_thread :shared;
+    $server_thread[$busy_i] = 0;
+    $server_thread[$client_i] = -1;
+    $server_thread[$id_i] = $i;
+    $thread_pool[$i] = \@server_thread;
+
+    threads->create(\&worker, $i)->detach();
 }
 
 my $server = IO::Socket::INET->new(
@@ -39,19 +37,20 @@ my $server = IO::Socket::INET->new(
 
 print "Listening on $port\n";
 
+my @clients;
 while (1) {
     if ((my $free_thread_id = get_free_thread()) != -1) {
         my $clt = $server->accept();
-        $thread_pool[$free_thread_id]->client($clt);
-
+        push @clients, $clt;
+        $thread_pool[$free_thread_id]->[$client_i] = fileno($clt);
     }
     usleep(1000);
 }
 
 sub get_free_thread {
     for (my $i = 0; $i < $thread_count; $i++) {
-        if ($thread_pool[$i]->busy == 0) {
-            $thread_pool[$i]->busy(1);
+        if ($thread_pool[$i]->[$busy_i] == 0) {
+            $thread_pool[$i]->[$busy_i] = 1;
             return $i;
         }
     }
@@ -63,16 +62,15 @@ sub worker {
     my $meta = $thread_pool[$id];
     while (1) {
         while (1) {
-            if ($meta->busy == 1 && $meta->client != -1) {
+            if ($meta->[$busy_i] == 1 && $meta->[$client_i] != -1) {
                 last;
             }
             usleep(5000);
         }
-        my $clt = $meta->client;
-        my $clt_addr = $clt->peerhost;
-        my $clt_port = $clt->peerport;
-        print "Thread #$id: client connected: $clt_addr:$clt_port\n";
+        my $fn = $meta->[$client_i];
 
+        open my $clt, '+<&=' . $fn or die $!;
+        print "Thread #$id: client $fn connected!\n";
         my $request = "";
         while (<$clt>) {
             $request .= $_;
@@ -94,7 +92,7 @@ sub worker {
         }
 
         close $clt;
-        $meta->client(-1);
-        $meta->busy(0);
+        $meta->[$client_i] = -1;
+        $meta->[$busy_i] = 0;
     }
 }
